@@ -1,114 +1,89 @@
-const express = require("express")
-const http = require("http")
-const { Server } = require("socket.io")
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-const app = express()
-const server = http.createServer(app)
+const app = express();
+const server = http.createServer(app);
 
-const io = new Server(server,{
-cors:{origin:"*"}
-})
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
-const rooms = {}
+const rooms = {};
 
-io.on("connection",(socket)=>{
+io.on("connection", (socket) => {
 
-socket.on("join-room",(data)=>{
+  // UNIRSE A SALA
+  socket.on("join-room", (data) => {
+    const room = data.room;
+    const nick = data.nick;
 
-const room=data.room
-const nick=data.nick
+    socket.join(room);
+    socket.room = room;
+    socket.nick = nick;
 
-socket.join(room)
+    if (!rooms[room]) {
+      rooms[room] = { history: [], users: {} };
+    }
 
-socket.room=room
-socket.nick=nick
+    rooms[room].users[socket.id] = nick;
 
-if(!rooms[room]){
+    // enviar historial completo
+    socket.emit("history", rooms[room].history);
 
-rooms[room]={
-history:[],
-users:{}
-}
+    // avisar que alguien entró
+    socket.to(room).emit("user-joined", nick);
+  });
 
-}
+  // MENSAJE
+  socket.on("message", (data) => {
+    const room = data.room;
+    if (!rooms[room]) return;
 
-rooms[room].users[socket.id]=nick
+    // Guardar id, nick, texto y tiempo
+    const msg = {
+      id: data.id,      // ahora se guarda el id
+      nick: data.nick,
+      text: data.text,
+      time: data.time
+    };
 
-/* enviar historial */
+    rooms[room].history.push(msg);
 
-socket.emit("history",rooms[room].history)
+    // limitar historial
+    if (rooms[room].history.length > 100) {
+      rooms[room].history.shift();
+    }
 
-/* avisar que alguien entró */
+    io.to(room).emit("message", msg);
+  });
 
-socket.to(room).emit("user-joined",nick)
+  // BORRAR CHAT
+  socket.on("delete-chat", (data) => {
+    const room = data.room;
+    const code = data.code;
 
-})
+    if (code !== "dani301") return;
 
-/* MENSAJE */
+    if (rooms[room]) {
+      rooms[room].history = [];
+    }
 
-socket.on("message",(data)=>{
+    io.to(room).emit("chat-deleted");
+  });
 
-const room=data.room
-if(!rooms[room]) return
+  // DESCONECTAR
+  socket.on("disconnect", () => {
+    const room = socket.room;
+    const nick = socket.nick;
 
-const msg={
-nick:data.nick,
-text:data.text,
-time:data.time
-}
+    if (!room || !rooms[room]) return;
 
-rooms[room].history.push(msg)
+    delete rooms[room].users[socket.id];
+    socket.to(room).emit("user-left", nick);
+  });
+});
 
-/* limitar historial */
-
-if(rooms[room].history.length>100){
-
-rooms[room].history.shift()
-
-}
-
-io.to(room).emit("message",msg)
-
-})
-
-/* BORRAR CHAT */
-
-socket.on("delete-chat",(data)=>{
-
-const room=data.room
-const code=data.code
-
-if(code!=="dani301") return
-
-if(rooms[room]){
-
-rooms[room].history=[]
-
-}
-
-io.to(room).emit("chat-deleted")
-
-})
-
-/* DESCONECTAR */
-
-socket.on("disconnect",()=>{
-
-const room=socket.room
-const nick=socket.nick
-
-if(!room || !rooms[room]) return
-
-delete rooms[room].users[socket.id]
-
-socket.to(room).emit("user-left",nick)
-
-})
-
-})
-
-server.listen(3000,()=>{
-
-console.log("server running")
-
-})
+server.listen(3000, () => {
+  console.log("server running on port 3000");
+});
