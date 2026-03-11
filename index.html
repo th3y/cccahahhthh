@@ -20,11 +20,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #login button{width:100%;padding:14px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #login button:hover{background:#1e40af;}
 #loginError{color:#ef4444;font-size:13px;text-align:center;margin-top:8px;min-height:18px;}
-#loginStatus{
-  font-size:12px;text-align:center;margin-top:6px;min-height:16px;
-  color:#facc15;opacity:0;transition:opacity 0.4s;
-}
-#loginStatus.visible{opacity:1;}
 
 /* ---- CHAT ---- */
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
@@ -47,7 +42,11 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   opacity:0;transform:translateY(10px);
   animation:fadeIn 0.3s forwards;
   position:relative;
+  cursor:grab;
+  transition:background 0.15s, transform 0.15s, box-shadow 0.15s;
+  will-change:transform;
 }
+.message:active{ cursor:grabbing; }
 .me{align-self:flex-end;background:#2563eb;}
 .other{align-self:flex-start;background:#1f2937;}
 .message.system{
@@ -123,22 +122,22 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
 
-/* ---- BOTON CITAR ---- */
-.reply-btn{
-  display:none;
-  position:absolute;top:50%;transform:translateY(-50%);
-  background:rgba(255,255,255,0.12);border:none;color:white;
-  border-radius:50%;width:28px;height:28px;
-  cursor:pointer;font-size:14px;
-  align-items:center;justify-content:center;
-  transition:background 0.15s;
-  right:-36px;
-  padding:0;
-  line-height:1;
+/* ---- SWIPE / DRAG INDICATOR ---- */
+.reply-icon{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  background:#2563eb;color:white;border-radius:50%;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;opacity:0;transition:opacity 0.15s;
+  pointer-events:none;
+  right:-38px;
 }
-.message.me .reply-btn{ right:auto; left:-36px; }
-.message:hover .reply-btn{ display:flex; }
-.reply-btn:hover{ background:rgba(255,255,255,0.25); }
+.message.me .reply-icon{ right:auto;left:-38px; }
+.message.dragging .reply-icon{ opacity:1; }
+.message.dragging{
+  box-shadow:0 4px 20px rgba(37,99,235,0.4);
+  z-index:10;
+}
 </style>
 </head>
 <body>
@@ -151,7 +150,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   <input id="room" type="password" placeholder="Código de sala">
   <button id="loginBtn" type="button">Publicar dato</button>
   <div id="loginError"></div>
-  <div id="loginStatus"></div>
 </div>
 
 <!-- CHAT -->
@@ -194,7 +192,12 @@ let room = "", nick = "";
 let coldTimer, inactivityTimer;
 let replyTo = null; // { id, nick, text }
 
-
+// Drag / swipe tracking
+let dragTarget = null;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragCurrentX = 0;
+let isDragging = false;
 
 const motivationMessages = [
   "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
@@ -271,50 +274,27 @@ async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
   const errEl = document.getElementById("loginError");
-  const statusEl2 = document.getElementById("loginStatus");
   errEl.textContent = "";
-  statusEl2.textContent = "";
-  statusEl2.classList.remove("visible");
 
   if(!nick){ errEl.textContent = "Ingresa un nick"; return; }
   if(!pass){ errEl.textContent = "Ingresa un código"; return; }
 
-  // Deshabilitar botón mientras conecta
-  const btn = document.getElementById("loginBtn");
-  btn.disabled = true;
-
-  // Mostrar estado de conexión
-  statusEl2.textContent = "Conectando al servidor...";
-  statusEl2.classList.add("visible");
-
-  // Timer para avisar si tarda (Render durmiendo)
-  const slowTimer = setTimeout(() => {
-    statusEl2.textContent = "El atun está despertando, un momento...";
-  }, 3000);
-
+  // Validar código contra servidor antes de hashear sala
   const tempSocket = io("https://cccahahhthh.onrender.com");
-
   tempSocket.on("connect", () => {
-    clearTimeout(slowTimer);
-    statusEl2.textContent = "Verificando código...";
     tempSocket.emit("validate-code", { code: pass }, (res) => {
       tempSocket.disconnect();
-      btn.disabled = false;
-      statusEl2.classList.remove("visible");
       if(!res.ok){
         errEl.textContent = "Código inválido";
         return;
       }
+      // Código válido → continuar
       proceedToChat(pass);
     });
   });
-
   tempSocket.on("connect_error", () => {
-    clearTimeout(slowTimer);
-    tempSocket.disconnect();
-    btn.disabled = false;
-    statusEl2.classList.remove("visible");
     errEl.textContent = "Error de conexión";
+    tempSocket.disconnect();
   });
 }
 
@@ -325,7 +305,7 @@ async function proceedToChat(pass){
 
   loginEl.style.display = "none";
   chatEl.style.display = "flex";
-  statusEl.innerText = "Despertando al atun...";
+  statusEl.innerText = "Iniciando servidor...";
   statusEl.className = "status-yellow";
 
   initSocket();
@@ -407,7 +387,7 @@ function addMessage(msg){
     ${replyHtml}
     <div>${linkify(msg.text)}</div>
     <div class="timestamp">${t}</div>
-    <button class="reply-btn" title="Citar">↩</button>
+    <div class="reply-icon">↩</div>
   `;
 
   attachReplyInteraction(el);
@@ -427,16 +407,99 @@ function addSystemMessage(text){
 // -------------------- INTERACCIÓN CITA --------------------
 function attachReplyInteraction(el){
   if(el.classList.contains("system")) return;
-  const btn = el.querySelector(".reply-btn");
-  if(!btn) return;
-  btn.addEventListener("click", e => {
-    e.stopPropagation();
-    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
+
+  const isMe = el.classList.contains("me");
+
+  // ---- DESKTOP: drag horizontal ----
+  el.addEventListener("mousedown", e => {
+    // Solo botón izquierdo, no en links
+    if(e.button !== 0 || e.target.tagName === "A") return;
+    dragTarget = el;
+    dragStartX = e.clientX;
+    dragCurrentX = 0;
+    isDragging = false;
+    e.preventDefault();
   });
-  // Mobile: mostrar botón siempre visible en touch
-  el.addEventListener("touchstart", ()=> btn.style.display="flex", { passive:true });
-  el.addEventListener("touchend", ()=> setTimeout(()=> btn.style.display="", 2000), { passive:true });
+
+  // ---- MOBILE: touch ----
+  el.addEventListener("touchstart", e => {
+    if(e.target.tagName === "A") return;
+    dragTarget = el;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    dragCurrentX = 0;
+    isDragging = false;
+  }, { passive: true });
 }
+
+// Mousemove global para drag desktop
+document.addEventListener("mousemove", e => {
+  if(!dragTarget) return;
+  const dx = e.clientX - dragStartX;
+  // Requiere al menos 8px para activar drag
+  if(!isDragging && Math.abs(dx) > 8) isDragging = true;
+  if(!isDragging) return;
+
+  dragCurrentX = Math.max(-80, Math.min(80, dx));
+  dragTarget.style.transform = `translateX(${dragCurrentX}px)`;
+  if(Math.abs(dragCurrentX) > 30){
+    dragTarget.classList.add("dragging");
+  } else {
+    dragTarget.classList.remove("dragging");
+  }
+});
+
+document.addEventListener("mouseup", e => {
+  if(!dragTarget || !isDragging) { dragTarget=null; return; }
+  const el = dragTarget;
+  const dx = dragCurrentX;
+  // Snap back
+  el.style.transition = "transform 0.2s";
+  el.style.transform = "translateX(0)";
+  el.classList.remove("dragging");
+  setTimeout(()=>{ el.style.transition=""; }, 200);
+
+  if(Math.abs(dx) > 55){
+    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
+  }
+  dragTarget = null;
+  isDragging = false;
+});
+
+// Touchmove/end global para swipe mobile
+document.addEventListener("touchmove", e => {
+  if(!dragTarget) return;
+  const dx = e.touches[0].clientX - dragStartX;
+  const dy = Math.abs(e.touches[0].clientY - dragStartY);
+  // Si el scroll vertical es mayor, cancelar
+  if(!isDragging && dy > dx) { dragTarget=null; return; }
+  if(!isDragging && Math.abs(dx) > 8) isDragging = true;
+  if(!isDragging) return;
+
+  dragCurrentX = Math.max(-80, Math.min(80, dx));
+  dragTarget.style.transform = `translateX(${dragCurrentX}px)`;
+  if(Math.abs(dragCurrentX) > 30){
+    dragTarget.classList.add("dragging");
+  } else {
+    dragTarget.classList.remove("dragging");
+  }
+}, { passive: true });
+
+document.addEventListener("touchend", e => {
+  if(!dragTarget || !isDragging) { dragTarget=null; return; }
+  const el = dragTarget;
+  const dx = dragCurrentX;
+  el.style.transition = "transform 0.2s";
+  el.style.transform = "translateX(0)";
+  el.classList.remove("dragging");
+  setTimeout(()=>{ el.style.transition=""; }, 200);
+
+  if(Math.abs(dx) > 55){
+    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
+  }
+  dragTarget = null;
+  isDragging = false;
+});
 
 function setReply(id, replyNick, text){
   replyTo = { id, nick: replyNick, text };
