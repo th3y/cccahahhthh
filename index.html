@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
 
@@ -14,13 +14,13 @@
 box-sizing:border-box;
 margin:0;
 padding:0;
-font-family:system-ui,Segoe UI,Roboto,Arial;
+font-family:system-ui,Segoe UI,Roboto;
 }
 
 body{
-background:#0f172a;
+background:#0b0f19;
 color:white;
-height:100vh;
+height:100dvh;
 display:flex;
 justify-content:center;
 align-items:center;
@@ -31,26 +31,26 @@ align-items:center;
 #login{
 width:100%;
 max-width:420px;
+background:#121826;
 padding:40px;
-background:#1e293b;
 border-radius:14px;
-box-shadow:0 10px 40px rgba(0,0,0,0.4);
-text-align:center;
+box-shadow:0 15px 40px rgba(0,0,0,0.4);
 }
 
 #login h2{
+text-align:center;
 margin-bottom:20px;
+font-weight:600;
 }
 
 #login input{
 width:100%;
 padding:14px;
-border-radius:8px;
-border:none;
-background:#0f172a;
-color:white;
 margin-bottom:12px;
-font-size:15px;
+border:none;
+border-radius:8px;
+background:#0b0f19;
+color:white;
 }
 
 #login button{
@@ -58,7 +58,7 @@ width:100%;
 padding:14px;
 border:none;
 border-radius:8px;
-background:#3b82f6;
+background:#2563eb;
 color:white;
 cursor:pointer;
 }
@@ -68,18 +68,26 @@ cursor:pointer;
 #chat{
 display:none;
 flex-direction:column;
-height:100vh;
 width:100%;
 max-width:750px;
-background:#020617;
+height:100dvh;
+background:#0b0f19;
 }
 
+/* HEADER */
+
 #header{
+flex-shrink:0;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:14px 16px;
-border-bottom:1px solid #1e293b;
+padding:14px;
+border-bottom:1px solid #1f2937;
+}
+
+#status{
+font-size:12px;
+opacity:0.6;
 }
 
 #deleteBtn{
@@ -89,8 +97,9 @@ color:white;
 padding:6px 10px;
 border-radius:6px;
 cursor:pointer;
-font-size:13px;
 }
+
+/* MESSAGES */
 
 #messages{
 flex:1;
@@ -105,73 +114,71 @@ gap:12px;
 padding:10px 14px;
 border-radius:10px;
 max-width:70%;
-font-size:15px;
 display:flex;
 flex-direction:column;
+font-size:14px;
 }
 
 .me{
-background:#2563eb;
 align-self:flex-end;
+background:#2563eb;
 }
 
 .other{
-background:#1e293b;
 align-self:flex-start;
+background:#1f2937;
 }
 
 .author{
-font-size:12px;
+font-size:11px;
 opacity:0.7;
-margin-bottom:2px;
 }
 
 .timestamp{
-font-size:11px;
+font-size:10px;
 opacity:0.5;
 margin-top:4px;
 }
 
-/* INPUT AREA */
+/* INPUT */
 
 #inputArea{
+flex-shrink:0;
 display:flex;
-padding:12px;
-border-top:1px solid #1e293b;
+padding:10px;
+gap:10px;
+border-top:1px solid #1f2937;
+background:#0b0f19;
 }
 
 #msg{
 flex:1;
 padding:12px;
-border:none;
 border-radius:8px;
-background:#1e293b;
+border:none;
+background:#1f2937;
 color:white;
 }
 
 #sendBtn{
-margin-left:10px;
-padding:12px 18px;
+padding:12px 16px;
 border:none;
 border-radius:8px;
-background:#3b82f6;
+background:#2563eb;
 color:white;
 cursor:pointer;
 }
 
-/* MOBILE */
+/* MOBILE FIX */
 
 @media (max-width:600px){
 
-.message{
-max-width:85%;
+#messages{
+padding:14px;
 }
 
-#login{
-height:100vh;
-display:flex;
-flex-direction:column;
-justify-content:center;
+.message{
+max-width:85%;
 }
 
 }
@@ -182,27 +189,25 @@ justify-content:center;
 
 <body>
 
-<!-- LOGIN -->
-
 <div id="login">
 
 <h2>Atun con chat</h2>
 
 <input id="nick" placeholder="Nickname">
-
 <input id="room" type="password" placeholder="Room Password">
 
 <button onclick="join()">Enter</button>
 
 </div>
 
-<!-- CHAT -->
-
 <div id="chat">
 
 <div id="header">
 
-<span>Atun con chat</span>
+<div>
+<b>Atun con chat</b>
+<div id="status">Connecting...</div>
+</div>
 
 <button id="deleteBtn" onclick="deleteChat()">Delete</button>
 
@@ -213,7 +218,6 @@ justify-content:center;
 <div id="inputArea">
 
 <input id="msg" placeholder="Type message" enterkeyhint="send">
-
 <button id="sendBtn" onclick="send()">Send</button>
 
 </div>
@@ -229,33 +233,31 @@ const socket = io("https://cccahahhthh.onrender.com")
 let room=""
 let nick=""
 
-/* HASH SALA */
+/* HASH */
 
 async function hashRoom(password){
 
-const encoder = new TextEncoder()
-const data = encoder.encode(password)
+const enc=new TextEncoder()
+const buf=await crypto.subtle.digest("SHA-256",enc.encode(password))
 
-const hashBuffer = await crypto.subtle.digest("SHA-256",data)
-
-const hashArray = Array.from(new Uint8Array(hashBuffer))
-
-return hashArray.map(b=>b.toString(16).padStart(2,"0")).join("")
+return [...new Uint8Array(buf)]
+.map(x=>x.toString(16).padStart(2,"0"))
+.join("")
 
 }
 
-/* JOIN ROOM */
+/* JOIN */
 
 async function join(){
 
-const password=document.getElementById("room").value.trim()
 nick=document.getElementById("nick").value.trim()
+const pass=document.getElementById("room").value.trim()
 
-if(!password || !nick) return
+if(!nick||!pass)return
 
-room = await hashRoom(password)
+room=await hashRoom(pass)
 
-socket.emit("join-room",room)
+socket.emit("join-room",{room,nick})
 
 document.getElementById("login").style.display="none"
 document.getElementById("chat").style.display="flex"
@@ -266,15 +268,13 @@ document.getElementById("chat").style.display="flex"
 
 socket.on("history",(messages)=>{
 
-messages.forEach(m=>{
-addMessage(m.nick,m.text,m.time)
-})
+messages.forEach(m=>addMessage(m.nick,m.text,m.time))
 
 scrollDown()
 
 })
 
-/* MENSAJE NUEVO */
+/* MENSAJE */
 
 socket.on("message",(msg)=>{
 
@@ -284,7 +284,7 @@ scrollDown()
 
 })
 
-/* CHAT BORRADO */
+/* DELETE */
 
 socket.on("chat-deleted",()=>{
 
@@ -292,65 +292,87 @@ document.getElementById("messages").innerHTML=""
 
 })
 
-/* ENVIAR */
+/* USER CONNECT */
+
+socket.on("user-joined",(n)=>{
+
+systemMsg(n+" joined")
+
+})
+
+socket.on("user-left",(n)=>{
+
+systemMsg(n+" left")
+
+})
+
+/* SEND */
 
 function send(){
 
 const input=document.getElementById("msg")
 const text=input.value.trim()
 
-if(!text) return
+if(!text)return
 
-const msg = {
-
-room:room,
-nick:nick,
-text:text,
+socket.emit("message",{
+room,
+nick,
+text,
 time:new Date().toISOString()
-
-}
-
-socket.emit("message",msg)
+})
 
 input.value=""
 
 }
 
-/* ENTER ENVIA MENSAJE */
+/* ENTER */
 
-document.getElementById("msg").addEventListener("keydown",function(e){
+document.getElementById("msg").addEventListener("keydown",(e)=>{
 
-if(e.key === "Enter"){
-
+if(e.key==="Enter"){
 e.preventDefault()
 send()
-
 }
 
 })
 
-/* MOSTRAR MENSAJE */
+/* MESSAGE RENDER */
 
 function addMessage(author,text,time){
 
-const container=document.createElement("div")
+const el=document.createElement("div")
 
-container.className="message "+(author===nick?"me":"other")
+el.className="message "+(author===nick?"me":"other")
 
-const date = new Date(time)
-
-const t = date.toLocaleTimeString([],{
+const t=new Date(time).toLocaleTimeString([],{
 hour:'2-digit',
 minute:'2-digit'
 })
 
-container.innerHTML=
+el.innerHTML=
 
 "<div class='author'>"+author+"</div>"+
 "<div>"+text+"</div>"+
 "<div class='timestamp'>"+t+"</div>"
 
-document.getElementById("messages").appendChild(container)
+document.getElementById("messages").appendChild(el)
+
+}
+
+/* SYSTEM MSG */
+
+function systemMsg(text){
+
+const el=document.createElement("div")
+
+el.style.fontSize="12px"
+el.style.opacity="0.6"
+el.style.textAlign="center"
+
+el.innerText=text
+
+document.getElementById("messages").appendChild(el)
 
 }
 
@@ -358,23 +380,20 @@ document.getElementById("messages").appendChild(container)
 
 function scrollDown(){
 
-const chat=document.getElementById("messages")
-chat.scrollTop=chat.scrollHeight
+const box=document.getElementById("messages")
+box.scrollTop=box.scrollHeight
 
 }
 
-/* BORRAR CHAT */
+/* DELETE */
 
 function deleteChat(){
 
-const code = prompt("Delete code")
+const code=prompt("Delete code")
 
-if(!code) return
+if(!code)return
 
-socket.emit("delete-chat",{
-room:room,
-code:code
-})
+socket.emit("delete-chat",{room,code})
 
 }
 
