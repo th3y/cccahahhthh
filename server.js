@@ -84,6 +84,52 @@ io.on("connection", (socket) => {
   });
 });
 
+
+io.on("connection", (socket) => {
+
+  // UNIRSE A SALA
+  socket.on("join-room", (data) => {
+    const room = data.room;
+    const nick = data.nick;
+
+    socket.join(room);
+    socket.room = room;
+    socket.nick = nick;
+
+    if (!rooms[room]) {
+      rooms[room] = { history: [], users: {} };
+    }
+
+    rooms[room].users[socket.id] = nick;
+
+    // enviar historial completo
+    socket.emit("history", rooms[room].history);
+
+    // avisar que alguien entró
+    socket.to(room).emit("user-joined", nick);
+
+    // enviar lista actualizada de usuarios conectados
+    io.to(room).emit("update-users", Object.values(rooms[room].users));
+  });
+
+  // DESCONECTAR
+  socket.on("disconnect", () => {
+    const room = socket.room;
+    const nick = socket.nick;
+
+    if (!room || !rooms[room]) return;
+
+    delete rooms[room].users[socket.id];
+
+    socket.to(room).emit("user-left", nick);
+
+    // actualizar lista de usuarios conectados
+    io.to(room).emit("update-users", Object.values(rooms[room].users));
+  });
+
+  // ... resto del código (mensajes, delete-chat) permanece igual
+});
+
 server.listen(3000, () => {
   console.log("server running on port 3000");
 });

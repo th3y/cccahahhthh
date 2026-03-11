@@ -123,6 +123,15 @@ function join(){
     document.getElementById("messages").innerHTML="";
     localStorage.removeItem("chat_"+room);
   });
+  
+  socket.on("update-users", (users) => {
+	  const statusEl = document.getElementById("status");
+	  if(users.length === 0) {
+		statusEl.innerText = "Conectado (sin usuarios)";
+	  } else {
+		statusEl.innerText = "Conectado: " + users.join(", ");
+	  }
+	});
 }
 
 function send(){
