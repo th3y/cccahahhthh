@@ -13,6 +13,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #login input:focus{outline:none;box-shadow:0 0 8px #2563eb;}
 #login button{width:100%;padding:14px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #login button:hover{background:#1e40af;}
+
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
 #header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;transition:0.3s;}
 #header b{font-size:18px;}
@@ -23,18 +24,22 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .status-red    { color: #ef4444; }
 #deleteBtn{background:#ef4444;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;transition:0.2s;}
 #deleteBtn:hover{background:#b91c1c;}
+
 #messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
 .message{padding:10px 14px;border-radius:12px;max-width:70%;display:flex;flex-direction:column;font-size:14px;opacity:0;transform:translateY(10px);animation:fadeIn 0.3s forwards;}
 .me{align-self:flex-end;background:#2563eb;}
 .other{align-self:flex-start;background:#1f2937;}
+.system{align-self:center;background:#374151;font-style:italic;}
 .author{font-size:11px;opacity:0.7;margin-bottom:2px;}
 .timestamp{font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
+
 #inputArea{flex-shrink:0;display:flex;padding:10px;gap:10px;border-top:1px solid #1f2937;}
 #msg{flex:1;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
 #msg:focus{outline:none;box-shadow:0 0 8px #2563eb;}
 #sendBtn{padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
+
 #overlay{
   display:none;
   position:fixed; top:0; left:0; right:0; bottom:0;
@@ -45,6 +50,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   z-index:999;
   animation:fadeIn 0.5s forwards;
 }
+
 @keyframes fadeIn { to {opacity:1; transform:translateY(0);} }
 </style>
 </head>
@@ -80,47 +86,44 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
-
-// -------------------- ESTADO --------------------
+// -------------------- DATOS --------------------
 let seenMessages = new Set();
 let socket;
 let room="", nick="";
 let coldTimer;
 let inactivityTimer;
-let reconnectInterval;
 
-// -------------------- DATOS CURIOSOS --------------------
 const motivationMessages = [
-"El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
-"Los pulpos tienen tres corazones y su sangre es azul.",
-"El Sol representa más del 99% de la masa de nuestro sistema solar.",
-"Los flamencos nacen grises y se vuelven rosados por su alimentación.",
-"La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.",
-"Un día en Venus dura más que un año en Venus.",
-"Los tiburones existen desde antes que los árboles.",
-"El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.",
-"El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.",
-"Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.",
-"Las medusas existen desde hace más de 500 millones de años.",
-"El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones.",
-"Los gatos no pueden percibir sabores dulces.",
-"Las abejas pueden reconocer rostros humanos.",
-"Las vacas tienen mejores amigas y se estresan si se separan de ellas.",
-"Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.",
-"Los murciélagos siempre giran a la izquierda al salir de una cueva.",
-"El diamante más grande jamás encontrado pesaba más de 3,100 quilates.",
-"Los cocodrilos no pueden sacar la lengua.",
-"Los escorpiones brillan bajo luz ultravioleta.",
-"La luna se aleja de la Tierra aproximadamente 3.8 cm por año.",
-"Los pulpos pueden usar herramientas y abrir frascos para obtener comida.",
-"Los elefantes son los únicos animales que no pueden saltar.",
-"Las jirafas tienen 7 vértebras en el cuello, igual que los humanos.",
-"El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.",
-"El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.",
-"Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.",
-"El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.",
-"El Monte Everest crece aproximadamente 4 mm cada año.",
-"Los tiburones duermen con un ojo abierto y otro cerrado."
+  "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
+  "Los pulpos tienen tres corazones y su sangre es azul.",
+  "El Sol representa más del 99% de la masa de nuestro sistema solar.",
+  "Los flamencos nacen grises y se vuelven rosados por su alimentación.",
+  "La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.",
+  "Un día en Venus dura más que un año en Venus.",
+  "Los tiburones existen desde antes que los árboles.",
+  "El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.",
+  "El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.",
+  "Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.",
+  "Las medusas existen desde hace más de 500 millones de años, antes que los dinosaurios.",
+  "El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones, fenómeno llamado efecto Mpemba.",
+  "Los gatos no pueden percibir sabores dulces.",
+  "Las abejas pueden reconocer rostros humanos.",
+  "Las vacas tienen mejores amigas y se estresan si se separan de ellas.",
+  "Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.",
+  "Los murciélagos siempre giran a la izquierda al salir de una cueva.",
+  "El diamante más grande jamás encontrado pesaba más de 3,100 quilates.",
+  "Los cocodrilos no pueden sacar la lengua.",
+  "Los escorpiones brillan bajo luz ultravioleta.",
+  "La luna se aleja de la Tierra aproximadamente 3.8 cm por año.",
+  "Los pulpos pueden usar herramientas y abrir frascos para obtener comida.",
+  "Los elefantes son los únicos animales que no pueden saltar.",
+  "Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: 7.",
+  "El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.",
+  "El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.",
+  "Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.",
+  "El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.",
+  "El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.",
+  "Los tiburones duermen con un ojo abierto y otro cerrado."
 ];
 
 // -------------------- ELEMENTOS --------------------
@@ -130,6 +133,7 @@ const overlay = document.getElementById("overlay");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
 const statusEl = document.getElementById("status");
+const deleteBtn = document.getElementById("deleteBtn");
 
 // -------------------- UTIL --------------------
 function isMobile(){ return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
@@ -154,7 +158,6 @@ async function join(){
   if(!/^\d{3}$/.test(pass)){ alert("Contraseña inválida"); return; }
 
   localStorage.setItem("nick", nick);
-
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: " + room.slice(0,16);
 
@@ -167,55 +170,30 @@ async function join(){
   initSocket();
 }
 
-window.addEventListener("load", () => {
-  const savedNick = localStorage.getItem("nick");
-  if (savedNick) document.getElementById("nick").value = savedNick;
-
-  loginEl.style.display = "block";
-  chatEl.style.display = "none";
-  overlay.style.display = "none";
-  resetInactivity();
-});
-
 // -------------------- SOCKET --------------------
 function initSocket(){
-  socket = io("https://cccahahhthh.onrender.com", { reconnection:false });
+  socket = io("https://cccahahhthh.onrender.com");
 
   coldTimer = setTimeout(()=>{
     statusEl.innerText = "Conectando...";
     statusEl.className = "status-yellow";
   },2000);
 
-  // ping cada 5s
-  const pingInterval = setInterval(()=>{
-    if(socket.connected){
-      socket.emit("ping-check",{ room, nick });
-    }
-  },5000);
+  socket.emit("join-room",{room,nick});
 
   socket.on("connect", ()=>{
     clearTimeout(coldTimer);
-    clearInterval(reconnectInterval);
     statusEl.innerText = "Conectado";
     statusEl.className = "status-green";
-
-    socket.emit("join-room",{ room, nick });
   });
 
   socket.on("disconnect", ()=>{
     statusEl.innerText = "Desconectado";
     statusEl.className = "status-red";
-
-    reconnectInterval = setInterval(()=>{
-      if(!socket.connected){
-        console.log("Intentando reconectar...");
-        initSocket();
-      }
-    },3000);
   });
 
   socket.on("history",(messages)=>{
-    document.getElementById("messages").innerHTML = "";
+    document.getElementById("messages").innerHTML="";
     messages.forEach(m=>{
       if(seenMessages.has(m.id)) return;
       seenMessages.add(m.id);
@@ -229,13 +207,25 @@ function initSocket(){
     addMessage(msg.nick,msg.text,msg.time);
   });
 
-  socket.on("pong-check",(data)=>{
-    // se puede usar para actualizar estado u otra info
-    console.log("Pong recibido de",data.nick);
+  // mensajes tipo sistema
+  socket.on("user-joined",(user)=>{
+    addSystemMessage(`${user} se ha unido`);
   });
+  socket.on("user-left",(user)=>{
+    addSystemMessage(`${user} se ha ido`);
+  });
+
+  socket.on("chat-deleted",()=>{
+    document.getElementById("messages").innerHTML="";
+    overlay.innerText="Chat borrado correctamente";
+    overlay.style.display="flex";
+    setTimeout(()=>{ overlay.style.display="none"; },2000);
+  });
+
+  socket.on("update-users",(users)=>{ /* opcional si quieres lista */ });
 }
 
-// -------------------- MENSAJE --------------------
+// -------------------- MENSAJES --------------------
 function addMessage(author,text,time){
   const el=document.createElement("div");
   el.className="message "+(author===nick?"me":"other");
@@ -245,37 +235,44 @@ function addMessage(author,text,time){
   el.scrollIntoView({behavior:"smooth"});
 }
 
-// -------------------- ENVIAR --------------------
-msgInput.addEventListener("input",()=>{ sendBtn.disabled=!msgInput.value.trim(); });
-//msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ send(); } });
-msgInput.addEventListener("keydown", (e) => {
-  if (isMobile()) {
-    // en móviles, Enter agrega nueva línea (no enviar)
-    return;
-  }
+function addSystemMessage(text){
+  const el=document.createElement("div");
+  el.className="message system";
+  el.textContent = text;
+  document.getElementById("messages").appendChild(el);
+  el.scrollIntoView({behavior:"smooth"});
+}
 
-  // Desktop
-  if (e.key === "Enter") {
-    if (!e.shiftKey) { // solo Enter sin Shift envía
+// -------------------- ENVIAR --------------------
+msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
+msgInput.addEventListener("keydown",(e)=>{
+  if(isMobile()) return; // en móviles Enter agrega línea
+  if(e.key==="Enter"){
+    if(!e.shiftKey){
       e.preventDefault();
       send();
     }
-    // Shift+Enter permite nueva línea
   }
 });
-
 sendBtn.addEventListener("click", send);
 
 function send(){
   const text = msgInput.value.trim();
   if(!text || text.length>500) return;
   const msg = {id:Date.now()+"_"+Math.random(), room, nick, text, time:new Date().toISOString()};
-  socket.emit("message",msg);
+  socket.emit("message", msg);
   msgInput.value="";
   sendBtn.disabled=true;
-  if(isMobile()){ msgInput.focus({preventScroll:false}); msgInput.scrollIntoView({behavior:"smooth",block:"end"}); }
+  if(isMobile()){ msgInput.focus({preventScroll:false}); msgInput.scrollIntoView({behavior:"smooth", block:"end"}); }
   resetInactivity();
 }
+
+// -------------------- BORRAR CHAT --------------------
+deleteBtn.addEventListener("click", ()=>{
+  const code = prompt("Ingresa código de borrado");
+  if(!code) return;
+  socket.emit("delete-chat",{room,code});
+});
 
 // -------------------- OVERLAY --------------------
 function showOverlay(){
@@ -288,11 +285,11 @@ function hideOverlay(){ overlay.style.display="none"; }
 // -------------------- INACTIVIDAD --------------------
 function resetInactivity(){
   clearTimeout(inactivityTimer);
-  inactivityTimer=setTimeout(showOverlay,50000);
+  inactivityTimer = setTimeout(showOverlay,50000);
 }
-window.addEventListener("mousemove",resetInactivity);
-window.addEventListener("keydown",resetInactivity);
-window.addEventListener("touchstart",resetInactivity);
+window.addEventListener("mousemove", resetInactivity);
+window.addEventListener("keydown", resetInactivity);
+window.addEventListener("touchstart", resetInactivity);
 
 // -------------------- TECLAS --------------------
 window.addEventListener("keydown",(e)=>{
@@ -303,34 +300,14 @@ window.addEventListener("keydown",(e)=>{
   }
 });
 
-// -------------------- INICIALIZAR PAGINA --------------------
+// -------------------- INICIALIZAR --------------------
 window.addEventListener("load",()=>{
-  const savedNick=localStorage.getItem("nick");
-  if(savedNick) document.getElementById("nick").value=savedNick;
+  const savedNick = localStorage.getItem("nick");
+  if(savedNick) document.getElementById("nick").value = savedNick;
   loginEl.style.display="block";
   chatEl.style.display="none";
   overlay.style.display="none";
   resetInactivity();
-});
-
-const deleteBtn = document.getElementById("deleteBtn");
-
-deleteBtn.addEventListener("click", () => {
-  const code = prompt("Ingresa código de borrado"); // pedir confirmación
-  if (!code) return; // cancelar si no hay código
-  socket.emit("delete-chat", { room, code });
-});
-
-// Cuando el servidor confirma que borró el chat
-socket.on("chat-deleted", () => {
-  document.getElementById("messages").innerHTML = ""; // limpiar mensajes en pantalla
-  // opcional: mostrar overlay o mensaje temporal
-  overlay.innerText = ":)";
-  overlay.style.display = "flex";
-  
-  if(isMobile()) { showOverlay(); };
-  
-  setTimeout(() => { overlay.style.display = "none"; }, 2000);
 });
 </script>
 </body>
