@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Private Chat</title>
+<title>Atun con chat</title>
 
 <style>
 
@@ -29,7 +30,7 @@ align-items:center;
 
 #login{
 width:100%;
-max-width:400px;
+max-width:420px;
 padding:40px;
 background:#1e293b;
 border-radius:14px;
@@ -131,7 +132,7 @@ opacity:0.5;
 margin-top:4px;
 }
 
-/* INPUT */
+/* INPUT AREA */
 
 #inputArea{
 display:flex;
@@ -181,30 +182,37 @@ justify-content:center;
 
 <body>
 
+<!-- LOGIN -->
+
 <div id="login">
 
-<h2>Private Chat</h2>
+<h2>Atun con chat</h2>
 
 <input id="nick" placeholder="Nickname">
 
-<input id="room" placeholder="Room Password">
+<input id="room" type="password" placeholder="Room Password">
 
 <button onclick="join()">Enter</button>
 
 </div>
 
+<!-- CHAT -->
+
 <div id="chat">
 
 <div id="header">
-<span>Private conversation</span>
+
+<span>Atun con chat</span>
+
 <button id="deleteBtn" onclick="deleteChat()">Delete</button>
+
 </div>
 
 <div id="messages"></div>
 
 <div id="inputArea">
 
-<input id="msg" placeholder="Type message">
+<input id="msg" placeholder="Type message" enterkeyhint="send">
 
 <button id="sendBtn" onclick="send()">Send</button>
 
@@ -236,7 +244,7 @@ return hashArray.map(b=>b.toString(16).padStart(2,"0")).join("")
 
 }
 
-/* JOIN */
+/* JOIN ROOM */
 
 async function join(){
 
@@ -259,18 +267,28 @@ document.getElementById("chat").style.display="flex"
 socket.on("history",(messages)=>{
 
 messages.forEach(m=>{
-addMessage(m.text,m.time,m.nick===nick,m.nick)
+addMessage(m.nick,m.text,m.time)
 })
 
+scrollDown()
+
 })
 
-/* MENSAJES */
+/* MENSAJE NUEVO */
 
-socket.on("message",(data)=>{
+socket.on("message",(msg)=>{
 
-const isMe = data.nick === nick
+addMessage(msg.nick,msg.text,msg.time)
 
-addMessage(data.text,data.time,isMe,data.nick)
+scrollDown()
+
+})
+
+/* CHAT BORRADO */
+
+socket.on("chat-deleted",()=>{
+
+document.getElementById("messages").innerHTML=""
 
 })
 
@@ -283,60 +301,65 @@ const text=input.value.trim()
 
 if(!text) return
 
-const time=new Date().toISOString()
+const msg = {
 
-socket.emit("message",{
 room:room,
+nick:nick,
 text:text,
-time:time,
-nick:nick
-})
+time:new Date().toISOString()
+
+}
+
+socket.emit("message",msg)
 
 input.value=""
 
 }
 
-/* ADD MESSAGE */
+/* ENTER ENVIA MENSAJE */
 
-function addMessage(text,time,me,author){
+document.getElementById("msg").addEventListener("keydown",function(e){
 
-const container=document.createElement("div")
+if(e.key === "Enter"){
 
-container.classList.add("message")
-container.classList.add(me ? "me":"other")
-
-const name=document.createElement("div")
-name.classList.add("author")
-name.textContent=author
-
-const message=document.createElement("div")
-message.textContent=text
-
-const timestamp=document.createElement("div")
-timestamp.classList.add("timestamp")
-timestamp.textContent=formatTime(time)
-
-container.appendChild(name)
-container.appendChild(message)
-container.appendChild(timestamp)
-
-document.getElementById("messages").appendChild(container)
-
-document.getElementById("messages").scrollTop =
-document.getElementById("messages").scrollHeight
+e.preventDefault()
+send()
 
 }
 
-/* FORMATO HORA */
-
-function formatTime(iso){
-
-const date=new Date(iso)
-
-return date.toLocaleTimeString([],{
-hour:"2-digit",
-minute:"2-digit"
 })
+
+/* MOSTRAR MENSAJE */
+
+function addMessage(author,text,time){
+
+const container=document.createElement("div")
+
+container.className="message "+(author===nick?"me":"other")
+
+const date = new Date(time)
+
+const t = date.toLocaleTimeString([],{
+hour:'2-digit',
+minute:'2-digit'
+})
+
+container.innerHTML=
+
+"<div class='author'>"+author+"</div>"+
+"<div>"+text+"</div>"+
+"<div class='timestamp'>"+t+"</div>"
+
+document.getElementById("messages").appendChild(container)
+
+}
+
+/* SCROLL */
+
+function scrollDown(){
+
+const chat=document.getElementById("messages")
+chat.scrollTop=chat.scrollHeight
 
 }
 
@@ -344,33 +367,16 @@ minute:"2-digit"
 
 function deleteChat(){
 
-const code=prompt("Delete code")
+const code = prompt("Delete code")
 
-if(code==="DELETE123"){
+if(!code) return
 
-socket.emit("delete-chat",{room:room})
-
-}
-
-}
-
-/* CLEAR */
-
-socket.on("clear",()=>{
-
-document.getElementById("messages").innerHTML=""
-
+socket.emit("delete-chat",{
+room:room,
+code:code
 })
 
-/* SALA LLENA */
-
-socket.on("room-full",()=>{
-
-alert("Room full")
-
-location.reload()
-
-})
+}
 
 </script>
 

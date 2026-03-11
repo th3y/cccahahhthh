@@ -6,137 +6,81 @@ const app = express()
 const server = http.createServer(app)
 
 const io = new Server(server,{
-cors:{ origin:"*" }
+cors:{origin:"*"}
 })
 
-app.use(express.static("public"))
-
-let rooms = {}
-
-/*
-rooms = {
-
-  hash_room:{
-     users:[
-        {id:socketid}
-     ],
-     history:[
-        {nick:"juan",text:"hola",time:"..."}
-     ]
-  }
-
-}
-*/
+const rooms = {}
 
 io.on("connection",(socket)=>{
 
-/* JOIN ROOM */
+socket.on("join-room",(room)=>{
 
-socket.on("join-room",(roomHash)=>{
+socket.join(room)
+socket.room = room
 
-if(!rooms[roomHash]){
-
-rooms[roomHash]={
-users:[],
-history:[]
+if(!rooms[room]){
+rooms[room] = {
+history:[],
+users:[]
+}
 }
 
-}
-
-let users = rooms[roomHash].users
-
-/* limitar a 2 usuarios */
-
-
-users.push({
-id:socket.id
-})
-
-socket.join(roomHash)
+rooms[room].users.push(socket.id)
 
 /* enviar historial */
 
-socket.emit("history",rooms[roomHash].history)
+socket.emit("history",rooms[room].history)
 
 })
-
-/* MENSAJE */
 
 socket.on("message",(data)=>{
 
-let room = data.room
-
+const room = data.room
 if(!rooms[room]) return
 
-rooms[room].history.push({
+const msg = {
 nick:data.nick,
 text:data.text,
 time:data.time
-})
+}
 
-/* limitar historial tamaño */
+rooms[room].history.push(msg)
 
-if(rooms[room].history.length > 100){
+/* limite historial */
+
+if(rooms[room].history.length > 50){
 rooms[room].history.shift()
 }
 
-io.to(room).emit("message",data)
+io.to(room).emit("message",msg)
 
 })
-
-/* BORRAR CHAT */
 
 socket.on("delete-chat",(data)=>{
 
-let room = data.room
+const room=data.room
+const code=data.code
 
-if(!rooms[room]) return
+if(code !== "delete123") return
 
-rooms[room].history = []
+if(rooms[room]){
+rooms[room].history=[]
+}
 
-io.to(room).emit("clear")
+io.to(room).emit("chat-deleted")
 
 })
-
-/* DISCONNECT */
 
 socket.on("disconnect",()=>{
 
-for(const room in rooms){
+const room = socket.room
+if(!room || !rooms[room]) return
 
-rooms[room].users =
-rooms[room].users.filter(u=>u.id !== socket.id)
-
-if(rooms[room].users.length === 0){
-delete rooms[room]
-}
-
-}
+rooms[room].users = rooms[room].users.filter(u=>u!==socket.id)
 
 })
 
 })
-
-/* LIMPIAR MENSAJES > 48 HORAS */
-
-setInterval(()=>{
-
-const now = Date.now()
-const limit = 1000 * 60 * 60 * 48
-
-for(const room in rooms){
-
-rooms[room].history = rooms[room].history.filter(msg=>{
-
-const msgTime = new Date(msg.time).getTime()
-
-return (now - msgTime) < limit
-
-})
-
-}
-
-}, 60 * 60 * 1000) // cada 1 hora
 
 server.listen(3000,()=>{
 console.log("server running")
