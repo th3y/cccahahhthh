@@ -56,11 +56,11 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <body>
 
 <div id="login">
-<h2>Atun - Datos curiosos</h2>
+<h2>Atun - Datos Curiosos</h2>
 <input id="dummy" placeholder="Ingresa tu dato curioso">
 <input id="nick" placeholder="Nick">
 <input id="room" type="password" placeholder="Palabra aleatoria">
-<button id="loginBtn">Publicar dato curioso</button>
+<button id="loginBtn" type="button">Publicar dato</button>
 </div>
 
 <div id="chat">
@@ -90,39 +90,40 @@ let seenMessages = new Set();
 let socket;
 let room="", nick="";
 let coldTimer;
+let inactivityTimer;
 
 // -------------------- DATOS CURIOSOS --------------------
 const motivationMessages = [
-  "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
-  "Los pulpos tienen tres corazones y su sangre es azul.",
-  "El Sol representa más del 99% de la masa de nuestro sistema solar.",
-  "Los flamencos nacen grises y se vuelven rosados por su alimentación.",
-  "La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.",
-  "Un día en Venus dura más que un año en Venus.",
-  "Los tiburones existen desde antes que los árboles.",
-  "El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.",
-  "El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.",
-  "Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.",
-  "Las medusas existen desde hace más de 500 millones de años, antes que los dinosaurios.",
-  "El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones, fenómeno llamado efecto Mpemba.",
-  "Los gatos no pueden percibir sabores dulces.",
-  "Las abejas pueden reconocer rostros humanos.",
-  "Las vacas tienen mejores amigas y se estresan si se separan de ellas.",
-  "Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.",
-  "Los murciélagos siempre giran a la izquierda al salir de una cueva.",
-  "El diamante más grande jamás encontrado pesaba más de 3,100 quilates.",
-  "Los cocodrilos no pueden sacar la lengua.",
-  "Los escorpiones brillan bajo luz ultravioleta.",
-  "La luna se aleja de la Tierra aproximadamente 3.8 cm por año.",
-  "Los pulpos pueden usar herramientas y abrir frascos para obtener comida.",
-  "Los elefantes son los únicos animales que no pueden saltar.",
-  "Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: 7.",
-  "El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.",
-  "El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.",
-  "Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.",
-  "El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.",
-  "El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.",
-  "Los tiburones duermen con un ojo abierto y otro cerrado."
+"El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
+"Los pulpos tienen tres corazones y su sangre es azul.",
+"El Sol representa más del 99% de la masa de nuestro sistema solar.",
+"Los flamencos nacen grises y se vuelven rosados por su alimentación.",
+"La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.",
+"Un día en Venus dura más que un año en Venus.",
+"Los tiburones existen desde antes que los árboles.",
+"El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.",
+"El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.",
+"Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.",
+"Las medusas existen desde hace más de 500 millones de años.",
+"El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones.",
+"Los gatos no pueden percibir sabores dulces.",
+"Las abejas pueden reconocer rostros humanos.",
+"Las vacas tienen mejores amigas y se estresan si se separan de ellas.",
+"Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.",
+"Los murciélagos siempre giran a la izquierda al salir de una cueva.",
+"El diamante más grande jamás encontrado pesaba más de 3,100 quilates.",
+"Los cocodrilos no pueden sacar la lengua.",
+"Los escorpiones brillan bajo luz ultravioleta.",
+"La luna se aleja de la Tierra aproximadamente 3.8 cm por año.",
+"Los pulpos pueden usar herramientas y abrir frascos para obtener comida.",
+"Los elefantes son los únicos animales que no pueden saltar.",
+"Las jirafas tienen 7 vértebras en el cuello, igual que los humanos.",
+"El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.",
+"El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.",
+"Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.",
+"El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.",
+"El Monte Everest crece aproximadamente 4 mm cada año.",
+"Los tiburones duermen con un ojo abierto y otro cerrado."
 ];
 
 // -------------------- ELEMENTOS --------------------
@@ -145,12 +146,14 @@ async function hashRoom(password){
 }
 
 // -------------------- LOGIN --------------------
-document.getElementById("loginBtn").addEventListener("click", async () => { await join(); });
+document.getElementById("loginBtn").addEventListener("click", join);
+document.getElementById("room").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ join(); } });
+document.getElementById("nick").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ join(); } });
 
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
-  if(!nick) return;
+  if(!nick){ alert("Ingresa un nick"); return; }
 
   const blockedPasswords = ["123","000","111","999","321","666"];
   if(!/^\d{3}$/.test(pass) || blockedPasswords.includes(pass)){
@@ -212,8 +215,9 @@ function addMessage(author,text,time){
   el.scrollIntoView({behavior:"smooth"});
 }
 
+// -------------------- ENVIAR --------------------
 msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
-msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ send(); } });
 sendBtn.addEventListener("click", send);
 function send(){
   const text = msgInput.value.trim();
@@ -223,6 +227,7 @@ function send(){
   msgInput.value = "";
   sendBtn.disabled = true;
   if(isMobile()){ msgInput.focus({preventScroll:false}); msgInput.scrollIntoView({behavior:"smooth", block:"end"}); }
+  resetInactivity();
 }
 
 // -------------------- OVERLAY --------------------
@@ -230,34 +235,30 @@ function showOverlay(){
   if(isMobile()) return;
   overlay.style.display="flex";
   overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
-  localStorage.setItem("chatHidden","true");
 }
 function hideOverlay(){
   overlay.style.display="none";
-  chatEl.style.display="flex";
-  localStorage.setItem("chatHidden","false");
 }
+
+// -------------------- INACTIVIDAD --------------------
+function resetInactivity(){
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(()=>{
+    showOverlay();
+  }, 50000);
+}
+window.addEventListener("mousemove", resetInactivity);
+window.addEventListener("keydown", resetInactivity);
+window.addEventListener("touchstart", resetInactivity);
 
 // -------------------- TECLAS --------------------
 window.addEventListener("keydown", (e)=>{
-  if(e.ctrlKey && e.key.toLowerCase() === "q"){
+  if(e.ctrlKey && e.key.toLowerCase()==="q"){
     if(isMobile()) return;
-    if(chatEl.style.display !== "flex") return;
-    if(overlay.style.display === "flex"){ hideOverlay(); }
-    else{ showOverlay(); }
+    if(chatEl.style.display==="flex" && overlay.style.display!=="flex"){ showOverlay(); }
+    else{ hideOverlay(); }
   }
 });
-
-// -------------------- INACTIVIDAD --------------------
-let inactivityTimer;
-function resetInactivityTimer(){
-  clearTimeout(inactivityTimer);
-  if(isMobile()) return;
-  inactivityTimer = setTimeout(()=>{ if(chatEl.style.display==="flex") showOverlay(); },60000);
-}
-["mousemove","keydown","mousedown","touchstart"].forEach(evt=>{ window.addEventListener(evt, resetInactivityTimer); });
-window.addEventListener("load", resetInactivityTimer);
-msgInput.addEventListener("focus", resetInactivityTimer);
 
 // -------------------- INICIALIZAR PAGINA --------------------
 window.addEventListener("load", ()=>{
@@ -266,6 +267,7 @@ window.addEventListener("load", ()=>{
   loginEl.style.display="block";
   chatEl.style.display="none";
   overlay.style.display="none";
+  resetInactivity();
 });
 </script>
 </body>
