@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Atun - Datos curiosos</title>
+<title>Atun - datos curiosos</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto;}
 body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:center;align-items:center;}
@@ -56,11 +56,18 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <body>
 
 <div id="login">
+<<<<<<< HEAD
 <h2>Atun - Datos Curiosos</h2>
 <input id="dummy" placeholder="Ingresa tu dato curioso">
 <input id="nick" placeholder="Nick">
 <input id="room" type="password" placeholder="Palabra aleatoria">
 <button id="loginBtn" type="button">Publicar dato</button>
+=======
+<h2>Atun - Datos curiosos</h2>
+<input id="nick" placeholder="Nick">
+<input id="room" type="password" placeholder="Dato">
+<button id="loginBtn">Ingresar</button>
+>>>>>>> parent of 14d3491 (Update index.html)
 </div>
 
 <div id="chat">
@@ -140,8 +147,12 @@ const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
 const statusEl = document.getElementById("status");
 
+<<<<<<< HEAD
 // -------------------- UTIL --------------------
 function isMobile(){ return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+=======
+// -------------------- FUNCIONES --------------------
+>>>>>>> parent of 14d3491 (Update index.html)
 function escapeHtml(text){ return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 // -------------------- HASH --------------------
@@ -159,19 +170,30 @@ document.getElementById("nick").addEventListener("keydown", (e)=>{ if(e.key==="E
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
+<<<<<<< HEAD
 
   if(!nick){ alert("Ingresa un nick"); return; }
   if(!/^\d{3}$/.test(pass)){ alert("Contraseña inválida"); return; }
+=======
+  if(!nick || !pass) return;
+  localStorage.setItem("nick", nick);
+>>>>>>> parent of 14d3491 (Update index.html)
 
   // Genera hash de la sala
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: " + room.slice(0,16);
 
+<<<<<<< HEAD
   loginEl.style.display = "none";
   chatEl.style.display = "flex";
 
   statusEl.innerText = "Iniciando servidor...";
   statusEl.className = "status-yellow";
+=======
+  loginEl.style.display="none";
+  chatEl.style.display="flex";
+  document.getElementById("status").innerText="Iniciando servidor...";
+>>>>>>> parent of 14d3491 (Update index.html)
 
   // Inicializa socket
   socket = io("https://cccahahhthh.onrender.com");
@@ -237,12 +259,12 @@ function send(){
 
 // -------------------- OVERLAY --------------------
 function showOverlay(){
-  if(isMobile()) return;
   overlay.style.display="flex";
   overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
 }
 function hideOverlay(){
   overlay.style.display="none";
+<<<<<<< HEAD
 }
 
 // -------------------- INACTIVIDAD --------------------
@@ -265,14 +287,57 @@ window.addEventListener("keydown", (e)=>{
   }
 });
 
+=======
+  const savedNick = localStorage.getItem("nick");
+  if(savedNick){
+    chatEl.style.display="flex";
+    loginEl.style.display="none";
+  } else {
+    loginEl.style.display="block";
+    chatEl.style.display="none";
+  }
+  localStorage.setItem("chatHidden","false");
+}
+
+>>>>>>> parent of 14d3491 (Update index.html)
 // -------------------- INICIALIZAR PAGINA --------------------
 window.addEventListener("load", ()=>{
   const savedNick = localStorage.getItem("nick");
   if(savedNick) document.getElementById("nick").value = savedNick;
+<<<<<<< HEAD
   loginEl.style.display="block";
   chatEl.style.display="none";
   overlay.style.display="none";
   resetInactivity();
+=======
+
+  const overlayHidden = localStorage.getItem("chatHidden") === "true";
+
+  // Por defecto
+  if(savedNick){
+    loginEl.style.display = "none";
+    chatEl.style.display = "flex";
+  } else {
+    loginEl.style.display = "block";
+    chatEl.style.display = "none";
+  }
+
+  if(overlayHidden) showOverlay();
+});
+
+// -------------------- TECLAS --------------------
+window.addEventListener("keydown", (e)=>{
+  if(e.ctrlKey && e.key.toLowerCase() === "q"){
+    // Si overlay activo -> desactivar
+    if(overlay.style.display === "flex"){ hideOverlay(); }
+    else { 
+      // Si no hay nick aún -> mostrar login
+      const savedNick = localStorage.getItem("nick");
+      if(!savedNick) loginEl.style.display="block";
+      showOverlay();
+    }
+  }
+>>>>>>> parent of 14d3491 (Update index.html)
 });
 </script>
 </body>
