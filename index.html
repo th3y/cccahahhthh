@@ -20,6 +20,8 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #login button{width:100%;padding:14px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #login button:hover{background:#1e40af;}
 #loginError{color:#ef4444;font-size:13px;text-align:center;margin-top:8px;min-height:18px;}
+#loginStatus{font-size:12px;text-align:center;margin-top:6px;min-height:16px;color:#facc15;opacity:0;transition:opacity 0.4s;}
+#loginStatus.visible{opacity:1;}
 
 /* ---- CHAT ---- */
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
@@ -42,11 +44,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   opacity:0;transform:translateY(10px);
   animation:fadeIn 0.3s forwards;
   position:relative;
-  cursor:grab;
-  transition:background 0.15s, transform 0.15s, box-shadow 0.15s;
-  will-change:transform;
 }
-.message:active{ cursor:grabbing; }
 .me{align-self:flex-end;background:#2563eb;}
 .other{align-self:flex-start;background:#1f2937;}
 .message.system{
@@ -54,10 +52,32 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   font-size:12px;padding:4px 8px;border-radius:8px;opacity:0.8;
   cursor:default;
 }
-.message.highlighted{filter:brightness(1.3);}
 
 .author{font-size:11px;opacity:0.7;margin-bottom:2px;}
 .timestamp{font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
+
+/* ---- BOTON CITAR ---- */
+.reply-btn{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  right:-36px;
+  background:rgba(255,255,255,0.1);
+  border:none;color:white;
+  border-radius:50%;
+  width:28px;height:28px;
+  cursor:pointer;font-size:14px;
+  display:none;
+  align-items:center;justify-content:center;
+  transition:background 0.15s;
+  padding:0;line-height:1;
+}
+.message.me .reply-btn{right:auto;left:-36px;}
+.message:hover .reply-btn{display:flex;}
+.reply-btn:hover{background:rgba(255,255,255,0.25);}
+/* Mobile: siempre visible */
+@media (hover: none){
+  .reply-btn{display:flex;}
+}
 
 /* ---- CITA ---- */
 .reply-bubble{
@@ -70,21 +90,14 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   opacity:0.85;
 }
 .reply-bubble .reply-author{font-weight:bold;margin-bottom:2px;font-size:11px;}
-.reply-bubble .reply-text{
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;
-}
+.reply-bubble .reply-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
 
 /* ---- PREVIEW CITA ---- */
 #replyPreview{
-  display:none;
-  flex-shrink:0;
-  padding:8px 16px;
-  background:#1a2235;
-  border-top:1px solid #1f2937;
-  border-left:3px solid #2563eb;
-  font-size:13px;
-  align-items:center;
-  gap:10px;
+  display:none;flex-shrink:0;
+  padding:8px 16px;background:#1a2235;
+  border-top:1px solid #1f2937;border-left:3px solid #2563eb;
+  font-size:13px;align-items:center;gap:10px;
 }
 #replyPreview.active{display:flex;}
 #replyPreviewText{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0.8;}
@@ -100,7 +113,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
 
-/* ---- RATE LIMIT TOAST ---- */
+/* ---- TOAST ---- */
 #toast{
   position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
   background:#ef4444;color:white;padding:8px 18px;border-radius:8px;
@@ -111,33 +124,14 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 
 /* ---- OVERLAY ---- */
 #overlay{
-  display:none;
-  position:fixed;top:0;left:0;right:0;bottom:0;
+  display:none;position:fixed;top:0;left:0;right:0;bottom:0;
   background:#0b0f19;color:white;
   justify-content:center;align-items:center;
   font-size:24px;text-align:center;padding:20px;
-  z-index:999;
-  animation:fadeIn 0.5s forwards;
+  z-index:999;animation:fadeIn 0.5s forwards;
 }
 
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
-
-/* ---- SWIPE / DRAG INDICATOR ---- */
-.reply-icon{
-  position:absolute;
-  top:50%;transform:translateY(-50%);
-  background:#2563eb;color:white;border-radius:50%;
-  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
-  font-size:15px;opacity:0;transition:opacity 0.15s;
-  pointer-events:none;
-  right:-38px;
-}
-.message.me .reply-icon{ right:auto;left:-38px; }
-.message.dragging .reply-icon{ opacity:1; }
-.message.dragging{
-  box-shadow:0 4px 20px rgba(37,99,235,0.4);
-  z-index:10;
-}
 </style>
 </head>
 <body>
@@ -147,9 +141,10 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   <h2>Atun - Datos Curiosos</h2>
   <input id="dummy" placeholder="Ingresa tu dato curioso">
   <input id="nick" placeholder="Nick">
-  <input id="room" type="password" placeholder="Código de sala">
+  <input id="room" type="password" placeholder="Palabra">
   <button id="loginBtn" type="button">Publicar dato</button>
   <div id="loginError"></div>
+  <div id="loginStatus"></div>
 </div>
 
 <!-- CHAT -->
@@ -165,7 +160,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 
   <div id="messages"></div>
 
-  <!-- Preview de cita -->
   <div id="replyPreview">
     <div id="replyPreviewText">
       <span id="replyPreviewAuthor"></span>
@@ -190,14 +184,7 @@ let seenMessages = new Set();
 let socket;
 let room = "", nick = "";
 let coldTimer, inactivityTimer;
-let replyTo = null; // { id, nick, text }
-
-// Drag / swipe tracking
-let dragTarget = null;
-let dragStartX = 0;
-let dragStartY = 0;
-let dragCurrentX = 0;
-let isDragging = false;
+let replyTo = null;
 
 const motivationMessages = [
   "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
@@ -274,27 +261,46 @@ async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
   const errEl = document.getElementById("loginError");
+  const loginStatus = document.getElementById("loginStatus");
   errEl.textContent = "";
+  loginStatus.textContent = "";
+  loginStatus.classList.remove("visible");
 
   if(!nick){ errEl.textContent = "Ingresa un nick"; return; }
   if(!pass){ errEl.textContent = "Ingresa un código"; return; }
 
-  // Validar código contra servidor antes de hashear sala
+  const btn = document.getElementById("loginBtn");
+  btn.disabled = true;
+  loginStatus.textContent = "Despertando al atun...";
+  loginStatus.classList.add("visible");
+
+  const slowTimer = setTimeout(() => {
+    loginStatus.textContent = "El atun se esta despertand, espera...";
+  }, 3000);
+
   const tempSocket = io("https://cccahahhthh.onrender.com");
+
   tempSocket.on("connect", () => {
+    clearTimeout(slowTimer);
+    loginStatus.textContent = "Verificando código...";
     tempSocket.emit("validate-code", { code: pass }, (res) => {
       tempSocket.disconnect();
+      btn.disabled = false;
+      loginStatus.classList.remove("visible");
       if(!res.ok){
         errEl.textContent = "Código inválido";
         return;
       }
-      // Código válido → continuar
       proceedToChat(pass);
     });
   });
+
   tempSocket.on("connect_error", () => {
-    errEl.textContent = "Error de conexión";
+    clearTimeout(slowTimer);
     tempSocket.disconnect();
+    btn.disabled = false;
+    loginStatus.classList.remove("visible");
+    errEl.textContent = "Error de conexión";
   });
 }
 
@@ -302,12 +308,10 @@ async function proceedToChat(pass){
   localStorage.setItem("nick", nick);
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: " + room.slice(0,16);
-
   loginEl.style.display = "none";
   chatEl.style.display = "flex";
-  statusEl.innerText = "Iniciando servidor...";
+  statusEl.innerText = "Alimentando al atun...";
   statusEl.className = "status-yellow";
-
   initSocket();
 }
 
@@ -387,10 +391,14 @@ function addMessage(msg){
     ${replyHtml}
     <div>${linkify(msg.text)}</div>
     <div class="timestamp">${t}</div>
-    <div class="reply-icon">↩</div>
+    <button class="reply-btn" title="Citar">↩</button>
   `;
 
-  attachReplyInteraction(el);
+  const btn = el.querySelector(".reply-btn");
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
+  });
 
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({ behavior: "smooth" });
@@ -404,103 +412,7 @@ function addSystemMessage(text){
   el.scrollIntoView({ behavior: "smooth" });
 }
 
-// -------------------- INTERACCIÓN CITA --------------------
-function attachReplyInteraction(el){
-  if(el.classList.contains("system")) return;
-
-  const isMe = el.classList.contains("me");
-
-  // ---- DESKTOP: drag horizontal ----
-  el.addEventListener("mousedown", e => {
-    // Solo botón izquierdo, no en links
-    if(e.button !== 0 || e.target.tagName === "A") return;
-    dragTarget = el;
-    dragStartX = e.clientX;
-    dragCurrentX = 0;
-    isDragging = false;
-    e.preventDefault();
-  });
-
-  // ---- MOBILE: touch ----
-  el.addEventListener("touchstart", e => {
-    if(e.target.tagName === "A") return;
-    dragTarget = el;
-    dragStartX = e.touches[0].clientX;
-    dragStartY = e.touches[0].clientY;
-    dragCurrentX = 0;
-    isDragging = false;
-  }, { passive: true });
-}
-
-// Mousemove global para drag desktop
-document.addEventListener("mousemove", e => {
-  if(!dragTarget) return;
-  const dx = e.clientX - dragStartX;
-  // Requiere al menos 8px para activar drag
-  if(!isDragging && Math.abs(dx) > 8) isDragging = true;
-  if(!isDragging) return;
-
-  dragCurrentX = Math.max(-80, Math.min(80, dx));
-  dragTarget.style.transform = `translateX(${dragCurrentX}px)`;
-  if(Math.abs(dragCurrentX) > 30){
-    dragTarget.classList.add("dragging");
-  } else {
-    dragTarget.classList.remove("dragging");
-  }
-});
-
-document.addEventListener("mouseup", e => {
-  if(!dragTarget || !isDragging) { dragTarget=null; return; }
-  const el = dragTarget;
-  const dx = dragCurrentX;
-  // Snap back
-  el.style.transition = "transform 0.2s";
-  el.style.transform = "translateX(0)";
-  el.classList.remove("dragging");
-  setTimeout(()=>{ el.style.transition=""; }, 200);
-
-  if(Math.abs(dx) > 55){
-    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
-  }
-  dragTarget = null;
-  isDragging = false;
-});
-
-// Touchmove/end global para swipe mobile
-document.addEventListener("touchmove", e => {
-  if(!dragTarget) return;
-  const dx = e.touches[0].clientX - dragStartX;
-  const dy = Math.abs(e.touches[0].clientY - dragStartY);
-  // Si el scroll vertical es mayor, cancelar
-  if(!isDragging && dy > dx) { dragTarget=null; return; }
-  if(!isDragging && Math.abs(dx) > 8) isDragging = true;
-  if(!isDragging) return;
-
-  dragCurrentX = Math.max(-80, Math.min(80, dx));
-  dragTarget.style.transform = `translateX(${dragCurrentX}px)`;
-  if(Math.abs(dragCurrentX) > 30){
-    dragTarget.classList.add("dragging");
-  } else {
-    dragTarget.classList.remove("dragging");
-  }
-}, { passive: true });
-
-document.addEventListener("touchend", e => {
-  if(!dragTarget || !isDragging) { dragTarget=null; return; }
-  const el = dragTarget;
-  const dx = dragCurrentX;
-  el.style.transition = "transform 0.2s";
-  el.style.transform = "translateX(0)";
-  el.classList.remove("dragging");
-  setTimeout(()=>{ el.style.transition=""; }, 200);
-
-  if(Math.abs(dx) > 55){
-    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
-  }
-  dragTarget = null;
-  isDragging = false;
-});
-
+// -------------------- CITA --------------------
 function setReply(id, replyNick, text){
   replyTo = { id, nick: replyNick, text };
   document.getElementById("replyPreviewAuthor").textContent = replyNick + ": ";
@@ -527,9 +439,7 @@ function send(){
 
   const msg = {
     id: Date.now() + "_" + Math.random(),
-    room,
-    nick,
-    text,
+    room, nick, text,
     time: new Date().toISOString(),
     replyTo: replyTo || null
   };
