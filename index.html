@@ -153,6 +153,8 @@ async function join(){
   if(!nick){ alert("Ingresa un nick"); return; }
   if(!/^\d{3}$/.test(pass)){ alert("Contraseña inválida"); return; }
 
+  localStorage.setItem("nick", nick);
+
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: " + room.slice(0,16);
 
@@ -164,6 +166,16 @@ async function join(){
 
   initSocket();
 }
+
+window.addEventListener("load", () => {
+  const savedNick = localStorage.getItem("nick");
+  if (savedNick) document.getElementById("nick").value = savedNick;
+
+  loginEl.style.display = "block";
+  chatEl.style.display = "none";
+  overlay.style.display = "none";
+  resetInactivity();
+});
 
 // -------------------- SOCKET --------------------
 function initSocket(){
