@@ -34,18 +34,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .timestamp{font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
 
 #inputArea{flex-shrink:0;display:flex;padding:10px;gap:10px;border-top:1px solid #1f2937;}
-#msg {
-  padding:12px;
-  border-radius:8px;
-  border:none;
-  background:#1f2937;
-  color:white;
-  transition:0.2s;
-  resize: none;       /* evita que el usuario cambie tamaño */
-  min-height:40px;
-  max-height:120px;
-  overflow-y:auto;
-}
+#msg{flex:1;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
 #msg:focus{outline:none;box-shadow:0 0 8px #2563eb;}
 #sendBtn{padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
@@ -88,7 +77,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <div id="messages"></div>
 
 <div id="inputArea">
-<textarea id="msg" placeholder="Escribe tu mensaje" rows="2"></textarea>
+<input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send">
 <button id="sendBtn" disabled>Enviar</button>
 </div>
 </div>
@@ -249,15 +238,7 @@ function addSystemMessage(text){
 
 // -------------------- ENVIAR --------------------
 msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
-//msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ send(); } });
-msgInput.addEventListener("keydown", (e) => {
-  if(e.key==="Enter"){
-    if(!e.shiftKey){
-      e.preventDefault();
-      send();
-    }
-  }
-});
+msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ send(); } });
 sendBtn.addEventListener("click", send);
 
 function send(){
