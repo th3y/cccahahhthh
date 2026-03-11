@@ -61,7 +61,7 @@ rooms[room].history.push(msg)
 
 /* limitar historial */
 
-if(rooms[room].history.length>50){
+if(rooms[room].history.length>100){
 
 rooms[room].history.shift()
 
@@ -78,7 +78,7 @@ socket.on("delete-chat",(data)=>{
 const room=data.room
 const code=data.code
 
-if(code!=="delete123") return
+if(code!=="dani301") return
 
 if(rooms[room]){
 

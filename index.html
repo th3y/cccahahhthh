@@ -193,10 +193,10 @@ max-width:85%;
 
 <h2>Atun con chat</h2>
 
-<input id="nick" placeholder="Nickname">
-<input id="room" type="password" placeholder="Room Password">
+<input id="nick" placeholder="Nick">
+<input id="room" type="password" placeholder="Contraseña">
 
-<button onclick="join()">Enter</button>
+<button onclick="join()">Ingresar</button>
 
 </div>
 
@@ -206,10 +206,10 @@ max-width:85%;
 
 <div>
 <b>Atun con chat</b>
-<div id="status">Connecting...</div>
+<div id="status">Conectando...</div>
 </div>
 
-<button id="deleteBtn" onclick="deleteChat()">Delete</button>
+<button id="deleteBtn" onclick="deleteChat()">Eliminar</button>
 
 </div>
 
@@ -218,7 +218,7 @@ max-width:85%;
 <div id="inputArea">
 
 <input id="msg" placeholder="Type message" enterkeyhint="send">
-<button id="sendBtn" onclick="send()">Send</button>
+<button id="sendBtn" onclick="send()">Enviar</button>
 
 </div>
 
@@ -264,9 +264,31 @@ document.getElementById("chat").style.display="flex"
 
 }
 
+
+socket.on("connect",()=>{
+
+document.getElementById("status").innerText="Conectado"
+
+})
+
+socket.on("disconnect",()=>{
+
+document.getElementById("status").innerText="Desconectado"
+
+})
+
+socket.io.on("reconnect_attempt",()=>{
+
+document.getElementById("status").innerText="Reconectando..."
+
+})
+
+
 /* HISTORIAL */
 
 socket.on("history",(messages)=>{
+
+document.getElementById("messages").innerHTML=""
 
 messages.forEach(m=>addMessage(m.nick,m.text,m.time))
 
@@ -296,13 +318,13 @@ document.getElementById("messages").innerHTML=""
 
 socket.on("user-joined",(n)=>{
 
-systemMsg(n+" joined")
+systemMsg(n+" ingresó")
 
 })
 
 socket.on("user-left",(n)=>{
 
-systemMsg(n+" left")
+systemMsg(n+" se fue")
 
 })
 
@@ -314,6 +336,7 @@ const input=document.getElementById("msg")
 const text=input.value.trim()
 
 if(!text)return
+if(text.length > 500) return
 
 socket.emit("message",{
 room,
@@ -353,7 +376,7 @@ minute:'2-digit'
 el.innerHTML=
 
 "<div class='author'>"+author+"</div>"+
-"<div>"+text+"</div>"+
+"<div>"+escapeHtml(text)+"</div>"
 "<div class='timestamp'>"+t+"</div>"
 
 document.getElementById("messages").appendChild(el)
@@ -361,6 +384,15 @@ document.getElementById("messages").appendChild(el)
 }
 
 /* SYSTEM MSG */
+
+function escapeHtml(text){
+
+return text
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+
+}
 
 function systemMsg(text){
 
@@ -381,7 +413,13 @@ document.getElementById("messages").appendChild(el)
 function scrollDown(){
 
 const box=document.getElementById("messages")
+
+const nearBottom =
+box.scrollHeight - box.scrollTop - box.clientHeight < 100
+
+if(nearBottom){
 box.scrollTop=box.scrollHeight
+}
 
 }
 
@@ -389,7 +427,7 @@ box.scrollTop=box.scrollHeight
 
 function deleteChat(){
 
-const code=prompt("Delete code")
+const code=prompt("Codigo de eliminacion")
 
 if(!code)return
 
