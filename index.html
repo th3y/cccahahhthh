@@ -292,17 +292,24 @@ window.addEventListener("load",()=>{
   resetInactivity();
 });
 
-// -------------------- BORRAR CHAT --------------------
 const deleteBtn = document.getElementById("deleteBtn");
+
 deleteBtn.addEventListener("click", () => {
-  const code = prompt("Ingresa código de borrado"); // puedes pedir código de seguridad
-  if (!code) return;
+  const code = prompt("Ingresa código de borrado"); // pedir confirmación
+  if (!code) return; // cancelar si no hay código
   socket.emit("delete-chat", { room, code });
 });
 
-// cuando el servidor confirma borrado
+// Cuando el servidor confirma que borró el chat
 socket.on("chat-deleted", () => {
-  document.getElementById("messages").innerHTML = "";
+  document.getElementById("messages").innerHTML = ""; // limpiar mensajes en pantalla
+  // opcional: mostrar overlay o mensaje temporal
+  overlay.innerText = ":)";
+  overlay.style.display = "flex";
+  
+  if(isMobile()) { showOverlay(); };
+  
+  setTimeout(() => { overlay.style.display = "none"; }, 2000);
 });
 </script>
 </body>
