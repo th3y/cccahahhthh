@@ -245,6 +245,7 @@ input.value=""
 }
 /* ADD MESSAGE */
 
+
 function addMessage(text,time,me){
 
 const container=document.createElement("div")
@@ -291,13 +292,21 @@ const code=prompt("Enter delete code")
 
 if(code==="DELETE123"){
 
+socket.emit("delete-chat",{room:room})
+
+}
+
+}
+
+socket.on("message",(data)=>{
+
+addMessage(data.text,data.time,false)
+
+})
+
+socket.on("clear",()=>{
 document.getElementById("messages").innerHTML=""
-
-alert("Chat deleted")
-
-}
-
-}
+})
 
 </script>
 
