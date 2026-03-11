@@ -249,9 +249,18 @@ function addMessage(author,text,time){
 msgInput.addEventListener("input",()=>{ sendBtn.disabled=!msgInput.value.trim(); });
 //msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ send(); } });
 msgInput.addEventListener("keydown", (e) => {
-  if (!isMobile() && e.key === "Enter") { // en desktop, Enter envía
-    e.preventDefault();
-    send();
+  if (isMobile()) {
+    // en móviles, Enter agrega nueva línea (no enviar)
+    return;
+  }
+
+  // Desktop
+  if (e.key === "Enter") {
+    if (!e.shiftKey) { // solo Enter sin Shift envía
+      e.preventDefault();
+      send();
+    }
+    // Shift+Enter permite nueva línea
   }
 });
 
