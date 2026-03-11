@@ -153,44 +153,43 @@ document.getElementById("nick").addEventListener("keydown", (e)=>{ if(e.key==="E
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
+
   if(!nick){ alert("Ingresa un nick"); return; }
+  if(!/^\d{3}$/.test(pass)){ alert("Contraseña inválida"); return; }
 
-  const blockedPasswords = ["123","000","111","999","321","666"];
-  if(!/^\d{3}$/.test(pass) || blockedPasswords.includes(pass)){
-    alert("Palabra invalida");
-    return;
-  }
-
-  localStorage.setItem("nick", nick);
+  // Genera hash de la sala
   room = await hashRoom(pass);
-  document.getElementById("roomHash").innerText = "Sala: "+room.slice(0,16);
+  document.getElementById("roomHash").innerText = "Sala: " + room.slice(0,16);
 
-  loginEl.style.display="none";
-  chatEl.style.display="flex";
+  loginEl.style.display = "none";
+  chatEl.style.display = "flex";
 
-  statusEl.innerText="Iniciando servidor...";
-  statusEl.className="status-yellow";
+  statusEl.innerText = "Iniciando servidor...";
+  statusEl.className = "status-yellow";
 
+  // Inicializa socket
   socket = io("https://cccahahhthh.onrender.com");
   coldTimer = setTimeout(()=>{
-    statusEl.innerText="Conectando...";
-    statusEl.className="status-yellow";
+    statusEl.innerText = "Conectando...";
+    statusEl.className = "status-yellow";
   },2000);
 
   socket.emit("join-room",{room,nick});
 
   socket.on("connect", ()=>{
     clearTimeout(coldTimer);
-    statusEl.innerText="Conectado";
-    statusEl.className="status-green";
-  });
-  socket.on("disconnect", ()=>{
-    statusEl.innerText="Desconectado";
-    statusEl.className="status-red";
+    statusEl.innerText = "Conectado";
+    statusEl.className = "status-green";
   });
 
+  socket.on("disconnect", ()=>{
+    statusEl.innerText = "Desconectado";
+    statusEl.className = "status-red";
+  });
+
+  // Recibir mensajes
   socket.on("history", (messages)=>{
-    document.getElementById("messages").innerHTML="";
+    document.getElementById("messages").innerHTML = "";
     messages.forEach(m=>{
       if(seenMessages.has(m.id)) return;
       seenMessages.add(m.id);
