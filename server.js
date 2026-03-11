@@ -7,15 +7,22 @@ const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-// ruta para guardar historial
-const DATA_FILE = path.join(__dirname, "rooms.json");
+// -------------------- CONFIG --------------------
+// En tu .env define: VALID_CODES=abc,xyz,room1
+// Y DELETE_CODE=tucodigosecreto
+const VALID_CODES = (process.env.VALID_CODES || "").split(",").map(c => c.trim()).filter(Boolean);
+const DELETE_CODE = process.env.DELETE_CODE;
+
+// Rate limiting config
+const MIN_INTERVAL_MS = 500; // mínimo 500ms entre mensajes por usuario
 
 // -------------------- UTIL --------------------
+const DATA_FILE = path.join(__dirname, "rooms.json");
+
 function loadRooms() {
   try {
     if (fs.existsSync(DATA_FILE)) {
@@ -35,10 +42,25 @@ function saveRooms(rooms) {
   }
 }
 
+// -------------------- RATE LIMITER --------------------
+// Map: socketId -> lastMessageTimestamp
+const rateLimitMap = new Map();
+
+function initRateLimit(socketId) {
+  rateLimitMap.set(socketId, 0);
+}
+
+function checkRateLimit(socketId) {
+  const now = Date.now();
+  const last = rateLimitMap.get(socketId) || 0;
+  if (now - last < MIN_INTERVAL_MS) return false;
+  rateLimitMap.set(socketId, now);
+  return true;
+}
+
 // -------------------- ROOMS --------------------
 let rooms = loadRooms();
 
-// cada 15s guardar historial automáticamente
 setInterval(() => {
   saveRooms(rooms);
 }, 15000);
@@ -46,80 +68,86 @@ setInterval(() => {
 // -------------------- SOCKET.IO --------------------
 io.on("connection", (socket) => {
 
-  socket.on("join-room", (data) => {
-    const room = data.room;
-    const nick = data.nick;
+  // ---------- VALIDAR CÓDIGO DE ACCESO ----------
+  socket.on("validate-code", (data, callback) => {
+    const { code } = data;
+    // Si no hay códigos configurados en .env, bloquear todo
+    if (VALID_CODES.length === 0) {
+      return callback({ ok: false, reason: "no_codes_configured" });
+    }
+    if (!VALID_CODES.includes(code)) {
+      return callback({ ok: false, reason: "invalid_code" });
+    }
+    callback({ ok: true });
+  });
 
+  // ---------- JOIN ROOM ----------
+  socket.on("join-room", (data) => {
+    const { room, nick } = data;
     socket.join(room);
     socket.room = room;
     socket.nick = nick;
 
+    initRateLimit(socket.id);
+
     if (!rooms[room]) {
       rooms[room] = { history: [], users: {} };
     }
-
     rooms[room].users[socket.id] = nick;
 
-    // enviar historial solo al usuario que entra
     socket.emit("history", rooms[room].history);
-
-    // avisar a los demás que alguien entró
     socket.to(room).emit("user-joined", nick);
-
-    // actualizar lista de usuarios conectados para todos
     io.to(room).emit("update-users", Object.values(rooms[room].users));
   });
 
-  // manejar mensaje nuevo
+  // ---------- MENSAJE ----------
   socket.on("message", (data) => {
     const room = data.room;
     if (!rooms[room]) return;
+
+    // Rate limit check
+    if (!checkRateLimit(socket.id)) {
+      socket.emit("rate-limited", { reason: "Demasiados mensajes. Espera un momento." });
+      return;
+    }
 
     const msg = {
       id: data.id,
       nick: data.nick,
       text: data.text,
-      time: data.time
+      time: data.time,
+      // Mensaje citado (opcional)
+      replyTo: data.replyTo || null  // { id, nick, text }
     };
 
     rooms[room].history.push(msg);
-
-    // limitar historial a 100 mensajes
     if (rooms[room].history.length > 100) rooms[room].history.shift();
 
     io.to(room).emit("message", msg);
   });
 
-  // borrar chat (si tienes código)
+  // ---------- BORRAR CHAT ----------
   socket.on("delete-chat", (data) => {
-    const room = data.room;
-    const code = data.code;
-    if (code !== "dani301") return;
+    const { room, code } = data;
+    if (code !== DELETE_CODE) return;
     if (rooms[room]) rooms[room].history = [];
     io.to(room).emit("chat-deleted");
   });
 
-  // responder ping del cliente
-  socket.on("ping-check", (data) => {
+  // ---------- PING ----------
+  socket.on("ping-check", () => {
     socket.emit("pong-check", { nick: socket.nick, room: socket.room });
   });
 
-  // desconectar usuario
+  // ---------- DISCONNECT ----------
   socket.on("disconnect", () => {
-    const room = socket.room;
-    const nick = socket.nick;
-
+    const { room, nick } = socket;
+    rateLimitMap.delete(socket.id);
     if (!room || !rooms[room]) return;
-
     delete rooms[room].users[socket.id];
-
-    // avisar a los demás
     socket.to(room).emit("user-left", nick);
-
-    // actualizar lista de usuarios conectados
     io.to(room).emit("update-users", Object.values(rooms[room].users));
   });
-
 });
 
 server.listen(process.env.PORT || 3000, () => {
