@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Atun - datos curiosos</title>
+<title>Atun - Datos curiosos</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto;}
 body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:center;align-items:center;}
@@ -54,9 +54,10 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <body>
 
 <div id="login">
-<h2>Atun - Datos curiosos</h2>
+<h2>Atun</h2>
 <input id="nick" placeholder="Nick">
-<input id="room" type="password" placeholder="Dato">
+<input id="room" type="password" placeholder="Ingresa un dato">
+<input id="dummy" placeholder="Ingresa tu dato curioso">
 <button id="loginBtn">Ingresar</button>
 </div>
 
@@ -129,6 +130,11 @@ const overlay = document.getElementById("overlay");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
 
+// -------------------- UTIL --------------------
+function isMobile(){
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 // -------------------- FUNCIONES --------------------
 function escapeHtml(text){ return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function addMessage(author,text,time){
@@ -168,14 +174,26 @@ document.getElementById("loginBtn").addEventListener("click", async () => { awai
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
-  if(!nick || !pass) return;
+  if(!nick) return;
+
+  // Contraseña solo 3 cifras numéricas
+  if(!/^\d{3}$/.test(pass)){
+    alert("La clave debe ser solo 3 cifras numéricas");
+    return;
+  }
+
   localStorage.setItem("nick", nick);
 
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: "+room.slice(0,16);
 
+  // Overlay solo para PC/Tablet
+  const overlayActive = !isMobile() && localStorage.getItem("chatHidden")==="true";
+
   loginEl.style.display="none";
-  chatEl.style.display="flex";
+  if(overlayActive){ overlay.style.display="flex"; chatEl.style.display="none"; }
+  else{ chatEl.style.display="flex"; }
+
   document.getElementById("status").innerText="Iniciando servidor...";
 
   socket = io("https://cccahahhthh.onrender.com");
@@ -239,6 +257,7 @@ document.getElementById("deleteBtn").addEventListener("click", ()=>{
 
 // -------------------- OVERLAY --------------------
 function showOverlay(){
+  if(isMobile()) return;
   overlay.style.display="flex";
   overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
   localStorage.setItem("chatHidden","true");
@@ -246,47 +265,33 @@ function showOverlay(){
 function hideOverlay(){
   overlay.style.display="none";
   const savedNick = localStorage.getItem("nick");
-  if(savedNick){
-    chatEl.style.display="flex";
-    loginEl.style.display="none";
-  } else {
-    loginEl.style.display="block";
-    chatEl.style.display="none";
-  }
+  if(savedNick){ chatEl.style.display="flex"; loginEl.style.display="none"; }
+  else{ loginEl.style.display="block"; chatEl.style.display="none"; }
   localStorage.setItem("chatHidden","false");
 }
+
+// -------------------- TECLAS --------------------
+window.addEventListener("keydown", (e)=>{
+  if(e.ctrlKey && e.key.toLowerCase() === "q"){
+    if(isMobile()) return;
+    if(overlay.style.display === "flex"){ hideOverlay(); }
+    else{
+      const savedNick = localStorage.getItem("nick");
+      if(!savedNick){ loginEl.style.display="block"; }
+      showOverlay();
+    }
+  }
+});
 
 // -------------------- INICIALIZAR PAGINA --------------------
 window.addEventListener("load", ()=>{
   const savedNick = localStorage.getItem("nick");
   if(savedNick) document.getElementById("nick").value = savedNick;
 
-  const overlayHidden = localStorage.getItem("chatHidden") === "true";
-
-  // Por defecto
-  if(savedNick){
-    loginEl.style.display = "none";
-    chatEl.style.display = "flex";
-  } else {
-    loginEl.style.display = "block";
-    chatEl.style.display = "none";
-  }
-
-  if(overlayHidden) showOverlay();
-});
-
-// -------------------- TECLAS --------------------
-window.addEventListener("keydown", (e)=>{
-  if(e.ctrlKey && e.key.toLowerCase() === "q"){
-    // Si overlay activo -> desactivar
-    if(overlay.style.display === "flex"){ hideOverlay(); }
-    else { 
-      // Si no hay nick aún -> mostrar login
-      const savedNick = localStorage.getItem("nick");
-      if(!savedNick) loginEl.style.display="block";
-      showOverlay();
-    }
-  }
+  // Al cargar siempre mostrar login, sin importar overlay previo
+  loginEl.style.display="block";
+  chatEl.style.display="none";
+  overlay.style.display="none";
 });
 </script>
 </body>
