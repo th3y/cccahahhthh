@@ -37,6 +37,22 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
 
+#motivationOverlay{
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background:#0b0f19;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:24px;
+  text-align:center;
+  padding:20px;
+  z-index:999;
+  animation:fadeIn 0.5s forwards;
+}
+
 @keyframes fadeIn {
   to {opacity:1; transform:translateY(0);}
 }
@@ -69,121 +85,60 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 </div>
 </div>
 
+<div id="motivationOverlay"></div>
+
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
-// estado
+// -------------------- ESTADO --------------------
 let seenMessages = new Set();
 let socket;
 let room="", nick="";
 let coldTimer;
 
-// recuperar nick
-window.addEventListener("load", ()=>{
-  const savedNick = localStorage.getItem("nick");
-  if(savedNick) document.getElementById("nick").value = savedNick;
-});
+const motivationMessages = [
+  "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
+  "Los pulpos tienen tres corazones y su sangre es azul.",
+  "El Sol representa más del 99% de la masa de nuestro sistema solar.",
+  "Los flamencos nacen grises y se vuelven rosados por su alimentación.",
+  "La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.",
+  "Un día en Venus dura más que un año en Venus.",
+  "Los tiburones existen desde antes que los árboles.",
+  "El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.",
+  "El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.",
+  "Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.",
+  "La palabra 'robot' proviene del checo 'robota', que significa trabajo forzado.",
+  "Las abejas pueden reconocer rostros humanos.",
+  "El Monte Everest crece aproximadamente 4 milímetros cada año.",
+  "El cerebro humano sigue creciendo hasta los 25 años aproximadamente.",
+  "El océano Pacífico es más grande que toda la superficie terrestre combinada.",
+  "La velocidad de propagación de la electricidad en un cable es cercana a la velocidad de la luz.",
+  "El árbol más viejo del mundo tiene más de 5000 años.",
+  "El cuerpo humano tiene más de 60.000 millas de vasos sanguíneos.",
+  "Los gatos tienen 32 músculos en cada oreja.",
+  "El agua puede existir en los tres estados a la vez en el punto triple.",
+  "Las medusas existen desde hace más de 500 millones de años.",
+  "El chocolate contiene una sustancia llamada teobromina que es tóxica para los perros.",
+  "El cerebro utiliza alrededor del 20% del oxígeno que respiramos.",
+  "Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: siete.",
+  "Existen más posibles combinaciones de ajedrez que átomos en el universo observable.",
+  "El tiburón más grande registrado medía más de 12 metros de largo.",
+  "El cuerpo humano produce alrededor de 1 litro de saliva al día.",
+  "El hielo seco es dióxido de carbono sólido y no se derrite, se sublima.",
+  "Los delfines tienen nombres individuales con silbidos únicos para identificarse.",
+  "La luz del Sol tarda aproximadamente 8 minutos en llegar a la Tierra."
+];
+// -------------------- RECUPERAR ESTADO --------------------
+const hiddenState = localStorage.getItem("chatHidden") === "true";
 
-// habilitar/deshabilitar botón enviar
+// -------------------- ELEMENTOS --------------------
+const loginEl = document.getElementById("login");
+const chatEl = document.getElementById("chat");
+const overlay = document.getElementById("motivationOverlay");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
-msgInput.addEventListener("input", ()=>{
-  sendBtn.disabled = !msgInput.value.trim();
-});
 
-// HASH de la sala
-async function hashRoom(password){
-  const enc = new TextEncoder();
-  const buf = await crypto.subtle.digest("SHA-256", enc.encode(password));
-  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
-}
-
-// BOTÓN INGRESAR
-document.getElementById("loginBtn").addEventListener("click", async () => {
-    await join();
-});
-
-async function join(){
-  nick = document.getElementById("nick").value.trim();
-  const pass = document.getElementById("room").value.trim();
-  if(!nick || !pass) return;
-  localStorage.setItem("nick", nick);
-
-  const hashedRoom = await hashRoom(pass);
-  room = hashedRoom;
-  document.getElementById("roomHash").innerText = "Sala: "+hashedRoom.slice(0,16);
-
-  document.getElementById("login").style.display="none";
-  document.getElementById("chat").style.display="flex";
-  document.getElementById("status").innerText="Iniciando servidor...";
-
-  socket = io("https://cccahahhthh.onrender.com");
-
-  coldTimer = setTimeout(()=>{
-    document.getElementById("status").innerText="Intentando conectar...";
-  },2000);
-
-  socket.emit("join-room",{room,nick});
-
-  // SOCKETS
-  socket.on("connect", ()=> { clearTimeout(coldTimer); });
-  socket.on("disconnect", ()=> { document.getElementById("status").innerText="Desconectado"; });
-
-  socket.on("history", (messages)=>{
-    document.getElementById("messages").innerHTML="";
-    messages.forEach(m=>{
-      if(seenMessages.has(m.id)) return;
-      seenMessages.add(m.id);
-      addMessage(m.nick,m.text,m.time);
-    });
-    scrollDown();
-  });
-
-  socket.on("message", (msg)=>{
-    if(seenMessages.has(msg.id)) return;
-    seenMessages.add(msg.id);
-    saveLocalMessage(msg);
-    addMessage(msg.nick,msg.text,msg.time);
-    scrollDown();
-  });
-
-  // cuando alguien se une
-  socket.on("user-joined", (n) => {
-   // mostrar solo si NO es tu nick
-   if(n !== nick){
-  	 systemMsg(n + " se unió.");
-   }
-  });
-  
-  // cuando alguien se va
-  socket.on("user-left", (n) => {
-   systemMsg(n + " se fue.");
-  });
-  
-  socket.on("update-users", (users)=>{
-    const statusEl = document.getElementById("status");
-    if(users.length===0) statusEl.innerText="Conectado (sin usuarios)";
-    else statusEl.innerText="Conectado: "+users.join(", ");
-  });
-
-  socket.on("chat-deleted", ()=>{
-    document.getElementById("messages").innerHTML="";
-    localStorage.removeItem("chat_"+room);
-  });
-}
-
-// MENSAJES
-function send(){
-  const text = msgInput.value.trim();
-  if(!text || text.length>500) return;
-  const msg = {id:Date.now()+"_"+Math.random(), room, nick, text, time:new Date().toISOString()};
-  socket.emit("message", msg);
-  msgInput.value="";
-  sendBtn.disabled = true;
-}
-
-msgInput.addEventListener("keydown",(e)=>{
-  if(e.key==="Enter"){ e.preventDefault(); send(); }
-});
+// -------------------- FUNCIONES --------------------
+function escapeHtml(text){ return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 function addMessage(author,text,time){
   const el=document.createElement("div");
@@ -191,6 +146,7 @@ function addMessage(author,text,time){
   const t=new Date(time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   el.innerHTML="<div class='author'>"+author+"</div><div>"+escapeHtml(text)+"</div><div class='timestamp'>"+t+"</div>";
   document.getElementById("messages").appendChild(el);
+  el.scrollIntoView({behavior:"smooth"});
 }
 
 function systemMsg(text){
@@ -199,16 +155,7 @@ function systemMsg(text){
   el.style.animation="fadeIn 0.3s forwards";
   el.innerText=text;
   document.getElementById("messages").appendChild(el);
-  scrollDown();
-}
-
-function scrollDown(){
-  const box=document.getElementById("messages");
-  box.scrollTop = box.scrollHeight;
-}
-
-function escapeHtml(text){
-  return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  el.scrollIntoView({behavior:"smooth"});
 }
 
 function saveLocalMessage(msg){
@@ -219,10 +166,119 @@ function saveLocalMessage(msg){
   localStorage.setItem(key,JSON.stringify(history));
 }
 
+// -------------------- HASH --------------------
+async function hashRoom(password){
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(password));
+  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
+// -------------------- UNIRSE --------------------
+document.getElementById("loginBtn").addEventListener("click", async () => { await join(); });
+
+async function join(){
+  nick = document.getElementById("nick").value.trim();
+  const pass = document.getElementById("room").value.trim();
+  if(!nick || !pass) return;
+  localStorage.setItem("nick", nick);
+
+  room = await hashRoom(pass);
+  document.getElementById("roomHash").innerText = "Sala: "+room.slice(0,16);
+
+  loginEl.style.display="none";
+  chatEl.style.display="flex";
+  document.getElementById("status").innerText="Iniciando servidor...";
+
+  socket = io("https://cccahahhthh.onrender.com");
+  coldTimer = setTimeout(()=>{ document.getElementById("status").innerText="Intentando conectar..."; },2000);
+
+  socket.emit("join-room",{room,nick});
+
+  socket.on("connect", ()=>{ clearTimeout(coldTimer); });
+  socket.on("disconnect", ()=>{ document.getElementById("status").innerText="Desconectado"; });
+
+  socket.on("history", (messages)=>{
+    document.getElementById("messages").innerHTML="";
+    messages.forEach(m=>{
+      if(seenMessages.has(m.id)) return;
+      seenMessages.add(m.id);
+      addMessage(m.nick,m.text,m.time);
+    });
+  });
+
+  socket.on("message", (msg)=>{
+    if(seenMessages.has(msg.id)) return;
+    seenMessages.add(msg.id);
+    saveLocalMessage(msg);
+    addMessage(msg.nick,msg.text,msg.time);
+  });
+
+  socket.on("user-joined", (n)=>{ if(n !== nick){ systemMsg(n+" se unió."); } });
+  socket.on("user-left", (n)=>{ systemMsg(n+" se fue."); });
+
+  socket.on("update-users", (users)=>{
+    const statusEl = document.getElementById("status");
+    statusEl.innerText = users.length===0 ? "Conectado (sin usuarios)" : "Conectado: "+users.join(", ");
+  });
+
+  socket.on("chat-deleted", ()=>{
+    document.getElementById("messages").innerHTML="";
+    localStorage.removeItem("chat_"+room);
+  });
+}
+
+// -------------------- ENVIAR --------------------
+msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
+sendBtn.addEventListener("click", send);
+msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+
+function send(){
+  const text = msgInput.value.trim();
+  if(!text || text.length>500) return;
+  const msg = {id:Date.now()+"_"+Math.random(), room, nick, text, time:new Date().toISOString()};
+  socket.emit("message", msg);
+  msgInput.value = "";
+  sendBtn.disabled = true;
+}
+
+// -------------------- BORRAR CHAT --------------------
 document.getElementById("deleteBtn").addEventListener("click", ()=>{
   const code=prompt("Delete code");
   if(!code) return;
   socket.emit("delete-chat",{room,code});
+});
+
+// -------------------- OCULTAR / MOTIVACIÓN --------------------
+function showMotivation(){
+  overlay.style.display="flex";
+  overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
+  chatEl.style.display = "none";
+  loginEl.style.display = "none";
+  localStorage.setItem("chatHidden","true");
+}
+
+function hideMotivation(){
+  overlay.style.display="none";
+  // mostrar según si el usuario ya estaba logueado
+  if(localStorage.getItem("nick")){
+    chatEl.style.display="flex";
+  } else {
+    loginEl.style.display="block";
+  }
+  localStorage.setItem("chatHidden","false");
+}
+
+if(hiddenState) showMotivation();
+
+// -------------------- TECLAS --------------------
+window.addEventListener("keydown", (e)=>{
+  if(e.ctrlKey && e.key.toLowerCase() === "c"){
+    if(overlay.style.display === "flex"){
+      hideMotivation();
+    } else {
+      showMotivation();
+    }
+  }
 });
 </script>
 </body>
