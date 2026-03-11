@@ -1,14 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=https://www.chatzy.com/68114219015347">
-  <title>Redirigiendo...</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Private Chat</title>
 </head>
+
 <body>
-  <script>
-    window.location.replace("https://www.chatzy.com/68114219015347");
-  </script>
-  <p>Redirigiendo... <a href="https://www.chatzy.com/68114219015347">clic aquí si no pasa nada</a></p>
+
+<div id="login">
+<h3>Enter chat key</h3>
+<input id="room">
+<button onclick="join()">Enter</button>
+</div>
+
+<div id="chat" style="display:none">
+<div id="messages"></div>
+
+<input id="msg">
+<button onclick="send()">Send</button>
+</div>
+
+<script>
+
+let room = ""
+
+function join(){
+  room = document.getElementById("room").value
+
+  document.getElementById("login").style.display="none"
+  document.getElementById("chat").style.display="block"
+}
+
+function send(){
+  const msg = document.getElementById("msg").value
+
+  const div = document.createElement("div")
+  div.textContent = msg
+
+  document.getElementById("messages").appendChild(div)
+}
+
+</script>
+
 </body>
 </html>
