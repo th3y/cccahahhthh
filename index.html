@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Datos curiosos</title>
+<title>Atun - datos curiosos</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto;}
 body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:center;align-items:center;}
@@ -54,10 +54,10 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <body>
 
 <div id="login">
-<h2>Atun</h2>
-<input id="nick" placeholder="Dato curioso">
-<input id="room" type="password" placeholder="">
-<button id="loginBtn">Registrar</button>
+<h2>Atun - Datos curiosos</h2>
+<input id="nick" placeholder="Nick">
+<input id="room" type="password" placeholder="Dato">
+<button id="loginBtn">Ingresar</button>
 </div>
 
 <div id="chat">
@@ -162,7 +162,7 @@ async function hashRoom(password){
   return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
 }
 
-// -------------------- UNIRSE --------------------
+// -------------------- LOGIN --------------------
 document.getElementById("loginBtn").addEventListener("click", async () => { await join(); });
 
 async function join(){
@@ -261,6 +261,9 @@ window.addEventListener("load", ()=>{
   const savedNick = localStorage.getItem("nick");
   if(savedNick) document.getElementById("nick").value = savedNick;
 
+  const overlayHidden = localStorage.getItem("chatHidden") === "true";
+
+  // Por defecto
   if(savedNick){
     loginEl.style.display = "none";
     chatEl.style.display = "flex";
@@ -269,14 +272,20 @@ window.addEventListener("load", ()=>{
     chatEl.style.display = "none";
   }
 
-  if(localStorage.getItem("chatHidden")==="true") showOverlay();
+  if(overlayHidden) showOverlay();
 });
 
 // -------------------- TECLAS --------------------
 window.addEventListener("keydown", (e)=>{
   if(e.ctrlKey && e.key.toLowerCase() === "q"){
+    // Si overlay activo -> desactivar
     if(overlay.style.display === "flex"){ hideOverlay(); }
-    else { showOverlay(); }
+    else { 
+      // Si no hay nick aún -> mostrar login
+      const savedNick = localStorage.getItem("nick");
+      if(!savedNick) loginEl.style.display="block";
+      showOverlay();
+    }
   }
 });
 </script>
