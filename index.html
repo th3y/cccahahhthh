@@ -42,10 +42,11 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   opacity:0;transform:translateY(10px);
   animation:fadeIn 0.3s forwards;
   position:relative;
-  cursor:pointer;
-  user-select:none;
-  transition:background 0.15s;
+  cursor:grab;
+  transition:background 0.15s, transform 0.15s, box-shadow 0.15s;
+  will-change:transform;
 }
+.message:active{ cursor:grabbing; }
 .me{align-self:flex-end;background:#2563eb;}
 .other{align-self:flex-start;background:#1f2937;}
 .message.system{
@@ -121,15 +122,22 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
 
-/* ---- SWIPE INDICATOR ---- */
-.swipe-hint{
-  position:absolute;right:-36px;top:50%;transform:translateY(-50%);
+/* ---- SWIPE / DRAG INDICATOR ---- */
+.reply-icon{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
   background:#2563eb;color:white;border-radius:50%;
-  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-  font-size:14px;opacity:0;transition:opacity 0.2s;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;opacity:0;transition:opacity 0.15s;
   pointer-events:none;
+  right:-38px;
 }
-.message.swipe-active .swipe-hint{opacity:1;}
+.message.me .reply-icon{ right:auto;left:-38px; }
+.message.dragging .reply-icon{ opacity:1; }
+.message.dragging{
+  box-shadow:0 4px 20px rgba(37,99,235,0.4);
+  z-index:10;
+}
 </style>
 </head>
 <body>
@@ -184,10 +192,12 @@ let room = "", nick = "";
 let coldTimer, inactivityTimer;
 let replyTo = null; // { id, nick, text }
 
-// Touch tracking para swipe
-let touchStartX = 0;
-let touchStartY = 0;
-let swipeTarget = null;
+// Drag / swipe tracking
+let dragTarget = null;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragCurrentX = 0;
+let isDragging = false;
 
 const motivationMessages = [
   "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
@@ -221,6 +231,7 @@ const motivationMessages = [
   "El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.",
   "Los tiburones duermen con un ojo abierto y otro cerrado."
 ];
+
 // -------------------- ELEMENTOS --------------------
 const loginEl  = document.getElementById("login");
 const chatEl   = document.getElementById("chat");
@@ -233,6 +244,14 @@ const toast    = document.getElementById("toast");
 // -------------------- UTIL --------------------
 function isMobile(){ return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
 function escapeHtml(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function linkify(text){
+  const escaped = escapeHtml(text);
+  return escaped.replace(
+    /(https?:\/\/[^\s<>"']+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;opacity:0.85;word-break:break-all;">$1</a>'
+  );
+}
 
 async function hashRoom(password){
   const enc = new TextEncoder();
@@ -366,9 +385,9 @@ function addMessage(msg){
   el.innerHTML = `
     <div class="author">${escapeHtml(msg.nick)}</div>
     ${replyHtml}
-    <div>${escapeHtml(msg.text)}</div>
+    <div>${linkify(msg.text)}</div>
     <div class="timestamp">${t}</div>
-    <div class="swipe-hint">↩</div>
+    <div class="reply-icon">↩</div>
   `;
 
   attachReplyInteraction(el);
@@ -389,41 +408,98 @@ function addSystemMessage(text){
 function attachReplyInteraction(el){
   if(el.classList.contains("system")) return;
 
-  // Desktop: doble clic
-  el.addEventListener("dblclick", ()=>{
-    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
+  const isMe = el.classList.contains("me");
+
+  // ---- DESKTOP: drag horizontal ----
+  el.addEventListener("mousedown", e => {
+    // Solo botón izquierdo, no en links
+    if(e.button !== 0 || e.target.tagName === "A") return;
+    dragTarget = el;
+    dragStartX = e.clientX;
+    dragCurrentX = 0;
+    isDragging = false;
+    e.preventDefault();
   });
 
-  // Mobile: swipe derecho
+  // ---- MOBILE: touch ----
   el.addEventListener("touchstart", e => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    swipeTarget = el;
-  }, { passive: true });
-
-  el.addEventListener("touchmove", e => {
-    if(swipeTarget !== el) return;
-    const dx = e.touches[0].clientX - touchStartX;
-    const dy = Math.abs(e.touches[0].clientY - touchStartY);
-    if(dy > 20) return; // scroll vertical, ignorar
-    if(dx > 30){
-      el.classList.add("swipe-active");
-    } else {
-      el.classList.remove("swipe-active");
-    }
-  }, { passive: true });
-
-  el.addEventListener("touchend", e => {
-    if(swipeTarget !== el) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-    el.classList.remove("swipe-active");
-    if(dx > 60 && dy < 40){
-      setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
-    }
-    swipeTarget = null;
+    if(e.target.tagName === "A") return;
+    dragTarget = el;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    dragCurrentX = 0;
+    isDragging = false;
   }, { passive: true });
 }
+
+// Mousemove global para drag desktop
+document.addEventListener("mousemove", e => {
+  if(!dragTarget) return;
+  const dx = e.clientX - dragStartX;
+  // Requiere al menos 8px para activar drag
+  if(!isDragging && Math.abs(dx) > 8) isDragging = true;
+  if(!isDragging) return;
+
+  dragCurrentX = Math.max(-80, Math.min(80, dx));
+  dragTarget.style.transform = `translateX(${dragCurrentX}px)`;
+  if(Math.abs(dragCurrentX) > 30){
+    dragTarget.classList.add("dragging");
+  } else {
+    dragTarget.classList.remove("dragging");
+  }
+});
+
+document.addEventListener("mouseup", e => {
+  if(!dragTarget || !isDragging) { dragTarget=null; return; }
+  const el = dragTarget;
+  const dx = dragCurrentX;
+  // Snap back
+  el.style.transition = "transform 0.2s";
+  el.style.transform = "translateX(0)";
+  el.classList.remove("dragging");
+  setTimeout(()=>{ el.style.transition=""; }, 200);
+
+  if(Math.abs(dx) > 55){
+    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
+  }
+  dragTarget = null;
+  isDragging = false;
+});
+
+// Touchmove/end global para swipe mobile
+document.addEventListener("touchmove", e => {
+  if(!dragTarget) return;
+  const dx = e.touches[0].clientX - dragStartX;
+  const dy = Math.abs(e.touches[0].clientY - dragStartY);
+  // Si el scroll vertical es mayor, cancelar
+  if(!isDragging && dy > dx) { dragTarget=null; return; }
+  if(!isDragging && Math.abs(dx) > 8) isDragging = true;
+  if(!isDragging) return;
+
+  dragCurrentX = Math.max(-80, Math.min(80, dx));
+  dragTarget.style.transform = `translateX(${dragCurrentX}px)`;
+  if(Math.abs(dragCurrentX) > 30){
+    dragTarget.classList.add("dragging");
+  } else {
+    dragTarget.classList.remove("dragging");
+  }
+}, { passive: true });
+
+document.addEventListener("touchend", e => {
+  if(!dragTarget || !isDragging) { dragTarget=null; return; }
+  const el = dragTarget;
+  const dx = dragCurrentX;
+  el.style.transition = "transform 0.2s";
+  el.style.transform = "translateX(0)";
+  el.classList.remove("dragging");
+  setTimeout(()=>{ el.style.transition=""; }, 200);
+
+  if(Math.abs(dx) > 55){
+    setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
+  }
+  dragTarget = null;
+  isDragging = false;
+});
 
 function setReply(id, replyNick, text){
   replyTo = { id, nick: replyNick, text };
