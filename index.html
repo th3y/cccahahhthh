@@ -264,7 +264,7 @@ localStorage.setItem("nick",nick)
 
 room = await hashRoom(pass)
 
-document.getElementById("roomHash").innerText="room: "+room.slice(0,16)
+document.getElementById("roomHash").innerText="ID: "+room.slice(0,16)
 
 loadLocalHistory()
 
@@ -287,13 +287,13 @@ socket.on("connect",()=>{
 
 clearTimeout(coldTimer)
 
-document.getElementById("status").innerText="Connected"
+document.getElementById("status").innerText="Conectado"
 
 })
 
 socket.on("disconnect",()=>{
 
-document.getElementById("status").innerText="Disconnected"
+document.getElementById("status").innerText="Desconectado"
 
 })
 
@@ -334,13 +334,13 @@ scrollDown()
 
 socket.on("user-joined",(n)=>{
 
-systemMsg(n+" ingreso")
+systemMsg(n+" cayó en el chat.")
 
 })
 
 socket.on("user-left",(n)=>{
 
-systemMsg(n+" salió")
+systemMsg(n+" se esfumó.")
 
 })
 
