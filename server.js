@@ -1,6 +1,9 @@
+// server.js
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -9,9 +12,38 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-// estructura de salas
-const rooms = {};
+// ruta para guardar historial
+const DATA_FILE = path.join(__dirname, "rooms.json");
 
+// -------------------- UTIL --------------------
+function loadRooms() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    }
+  } catch (err) {
+    console.error("Error leyendo rooms.json:", err);
+  }
+  return {};
+}
+
+function saveRooms(rooms) {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(rooms, null, 2));
+  } catch (err) {
+    console.error("Error guardando rooms.json:", err);
+  }
+}
+
+// -------------------- ROOMS --------------------
+let rooms = loadRooms();
+
+// cada 15s guardar historial automáticamente
+setInterval(() => {
+  saveRooms(rooms);
+}, 15000);
+
+// -------------------- SOCKET.IO --------------------
 io.on("connection", (socket) => {
 
   socket.on("join-room", (data) => {
@@ -23,10 +55,7 @@ io.on("connection", (socket) => {
     socket.nick = nick;
 
     if (!rooms[room]) {
-      rooms[room] = {
-        history: [],
-        users: {}
-      };
+      rooms[room] = { history: [], users: {} };
     }
 
     rooms[room].users[socket.id] = nick;
@@ -56,25 +85,23 @@ io.on("connection", (socket) => {
     rooms[room].history.push(msg);
 
     // limitar historial a 100 mensajes
-    if (rooms[room].history.length > 100) {
-      rooms[room].history.shift();
-    }
+    if (rooms[room].history.length > 100) rooms[room].history.shift();
 
     io.to(room).emit("message", msg);
   });
 
-  // borrar chat
+  // borrar chat (si tienes código)
   socket.on("delete-chat", (data) => {
     const room = data.room;
     const code = data.code;
-
     if (code !== "dani301") return;
-
-    if (rooms[room]) {
-      rooms[room].history = [];
-    }
-
+    if (rooms[room]) rooms[room].history = [];
     io.to(room).emit("chat-deleted");
+  });
+
+  // responder ping del cliente
+  socket.on("ping-check", (data) => {
+    socket.emit("pong-check", { nick: socket.nick, room: socket.room });
   });
 
   // desconectar usuario
@@ -86,7 +113,7 @@ io.on("connection", (socket) => {
 
     delete rooms[room].users[socket.id];
 
-    // avisar a los demás que alguien se fue
+    // avisar a los demás
     socket.to(room).emit("user-left", nick);
 
     // actualizar lista de usuarios conectados
@@ -95,6 +122,6 @@ io.on("connection", (socket) => {
 
 });
 
-server.listen(3000, () => {
-  console.log("server running on port 3000");
+server.listen(process.env.PORT || 3000, () => {
+  console.log("Server running on port", process.env.PORT || 3000);
 });
