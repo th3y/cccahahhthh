@@ -55,9 +55,9 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 
 <div id="login">
 <h2>Atun</h2>
-<input id="nick" placeholder="Nick">
-<input id="room" type="password" placeholder="Ingresa un dato">
 <input id="dummy" placeholder="Ingresa tu dato curioso">
+<input id="nick" placeholder="Nick">
+<input id="room" type="password" placeholder="Palabra aleatoria">
 <button id="loginBtn">Ingresar</button>
 </div>
 
@@ -100,27 +100,7 @@ const motivationMessages = [
   "Los tiburones existen desde antes que los árboles.",
   "El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.",
   "El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.",
-  "Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.",
-  "La palabra 'robot' proviene del checo 'robota', que significa trabajo forzado.",
-  "Las abejas pueden reconocer rostros humanos.",
-  "El Monte Everest crece aproximadamente 4 milímetros cada año.",
-  "El cerebro humano sigue creciendo hasta los 25 años aproximadamente.",
-  "El océano Pacífico es más grande que toda la superficie terrestre combinada.",
-  "La velocidad de propagación de la electricidad en un cable es cercana a la velocidad de la luz.",
-  "El árbol más viejo del mundo tiene más de 5000 años.",
-  "El cuerpo humano tiene más de 60.000 millas de vasos sanguíneos.",
-  "Los gatos tienen 32 músculos en cada oreja.",
-  "El agua puede existir en los tres estados a la vez en el punto triple.",
-  "Las medusas existen desde hace más de 500 millones de años.",
-  "El chocolate contiene una sustancia llamada teobromina que es tóxica para los perros.",
-  "El cerebro utiliza alrededor del 20% del oxígeno que respiramos.",
-  "Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: siete.",
-  "Existen más posibles combinaciones de ajedrez que átomos en el universo observable.",
-  "El tiburón más grande registrado medía más de 12 metros de largo.",
-  "El cuerpo humano produce alrededor de 1 litro de saliva al día.",
-  "El hielo seco es dióxido de carbono sólido y no se derrite, se sublima.",
-  "Los delfines tienen nombres individuales con silbidos únicos para identificarse.",
-  "La luz del Sol tarda aproximadamente 8 minutos en llegar a la Tierra."
+  "Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra."
 ];
 
 // -------------------- ELEMENTOS --------------------
@@ -177,8 +157,8 @@ async function join(){
   if(!nick) return;
 
   // Contraseña solo 3 cifras numéricas
-  if(!/^\d{3}$/.test(pass)){
-    alert("La clave debe ser solo 3 cifras numéricas");
+  if(!/^\d{3}$/.test(pass) || pass === "123"  || pass === "111"  || pass === "000"  || pass === "666" ){
+    alert("Palabra invalida");
     return;
   }
 
@@ -274,12 +254,9 @@ function hideOverlay(){
 window.addEventListener("keydown", (e)=>{
   if(e.ctrlKey && e.key.toLowerCase() === "q"){
     if(isMobile()) return;
+    if(chatEl.style.display !== "flex") return; // Ctrl+Q solo si chat está activo
     if(overlay.style.display === "flex"){ hideOverlay(); }
-    else{
-      const savedNick = localStorage.getItem("nick");
-      if(!savedNick){ loginEl.style.display="block"; }
-      showOverlay();
-    }
+    else{ showOverlay(); }
   }
 });
 
