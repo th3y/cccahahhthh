@@ -248,6 +248,7 @@ function send(){
   socket.emit("message", msg);
   msgInput.value = "";
   sendBtn.disabled = true;
+  focusMobileInput(); 
 }
 
 // -------------------- BORRAR CHAT --------------------
@@ -264,14 +265,29 @@ function showOverlay(){
   overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
   localStorage.setItem("chatHidden","true");
 }
+
+function focusMobileInput(){
+  if(!isMobile()) return;
+  msgInput.focus({preventScroll:false}); // abre teclado en móvil
+  setTimeout(()=>{
+    msgInput.scrollIntoView({behavior:"smooth", block:"end"});
+  }, 300); // pequeño delay para asegurar que el teclado se muestre
+}
+
+function showChat(){
+  loginEl.style.display="none";
+  overlay.style.display="none";
+  chatEl.style.display="flex";
+  focusMobileInput();
+}
+
 function hideOverlay(){
   overlay.style.display="none";
   const savedNick = localStorage.getItem("nick");
-  if(savedNick){ chatEl.style.display="flex"; loginEl.style.display="none"; }
+  if(savedNick){ showChat(); }
   else{ loginEl.style.display="block"; chatEl.style.display="none"; }
   localStorage.setItem("chatHidden","false");
 }
-
 // -------------------- TECLAS --------------------
 window.addEventListener("keydown", (e)=>{
   if(e.ctrlKey && e.key.toLowerCase() === "q"){
