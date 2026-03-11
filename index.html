@@ -100,7 +100,27 @@ const motivationMessages = [
   "Los tiburones existen desde antes que los árboles.",
   "El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.",
   "El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.",
-  "Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra."
+  "Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.",
+  "Las medusas existen desde hace más de 500 millones de años, antes que los dinosaurios.",
+  "El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones, fenómeno llamado efecto Mpemba.",
+  "Los gatos no pueden percibir sabores dulces.",
+  "Las abejas pueden reconocer rostros humanos.",
+  "Las vacas tienen mejores amigas y se estresan si se separan de ellas.",
+  "Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.",
+  "Los murciélagos siempre giran a la izquierda al salir de una cueva.",
+  "El diamante más grande jamás encontrado pesaba más de 3,100 quilates.",
+  "Los cocodrilos no pueden sacar la lengua.",
+  "Los escorpiones brillan bajo luz ultravioleta.",
+  "La luna se aleja de la Tierra aproximadamente 3.8 cm por año.",
+  "Los pulpos pueden usar herramientas y abrir frascos para obtener comida.",
+  "Los elefantes son los únicos animales que no pueden saltar.",
+  "Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: 7.",
+  "El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.",
+  "El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.",
+  "Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.",
+  "El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.",
+  "El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.",
+  "Los tiburones duermen con un ojo abierto y otro cerrado."
 ];
 
 // -------------------- ELEMENTOS --------------------
@@ -157,10 +177,12 @@ async function join(){
   if(!nick) return;
 
   // Contraseña solo 3 cifras numéricas
-  if(!/^\d{3}$/.test(pass) || pass === "123"  || pass === "111"  || pass === "000"  || pass === "666" ){
-    alert("Palabra invalida");
-    return;
-  }
+  const blockedPasswords = ["123", "000", "111", "999", "321", "666"];
+
+	if(!/^\d{3}$/.test(pass) || blockedPasswords.includes(pass)){
+		alert("Palabra invalida");
+		return;
+	}
 
   localStorage.setItem("nick", nick);
 
