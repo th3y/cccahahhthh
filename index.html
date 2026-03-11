@@ -29,7 +29,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .message{padding:10px 14px;border-radius:12px;max-width:70%;display:flex;flex-direction:column;font-size:14px;opacity:0;transform:translateY(10px);animation:fadeIn 0.3s forwards;}
 .me{align-self:flex-end;background:#2563eb;}
 .other{align-self:flex-start;background:#1f2937;}
-.system{align-self:center;background:#374151;font-style:italic;}
+.message.system{align-self:center;background:#374151;font-style:italic;font-size:12px;padding:4px 8px;border-radius:8px;opacity:0.8;}
 .author{font-size:11px;opacity:0.7;margin-bottom:2px;}
 .timestamp{font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
 
@@ -207,22 +207,15 @@ function initSocket(){
     addMessage(msg.nick,msg.text,msg.time);
   });
 
-  // mensajes tipo sistema
-  socket.on("user-joined",(user)=>{
-    addSystemMessage(`${user} se ha unido`);
-  });
-  socket.on("user-left",(user)=>{
-    addSystemMessage(`${user} se ha ido`);
-  });
+  socket.on("user-joined",(user)=> addSystemMessage(`${user} se ha unido`));
+  socket.on("user-left",(user)=> addSystemMessage(`${user} se ha ido`));
 
   socket.on("chat-deleted",()=>{
     document.getElementById("messages").innerHTML="";
-    overlay.innerText="Chat borrado correctamente";
-    overlay.style.display="flex";
-    setTimeout(()=>{ overlay.style.display="none"; },2000);
+    showOverlay(); // overlay motivacional para todos
   });
 
-  socket.on("update-users",(users)=>{ /* opcional si quieres lista */ });
+  socket.on("update-users",(users)=>{ /* opcional */ });
 }
 
 // -------------------- MENSAJES --------------------
