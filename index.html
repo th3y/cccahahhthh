@@ -37,6 +37,18 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
 
+#status {
+  font-size: 13px;
+  font-weight: bold;
+  opacity: 1;
+  margin-top: 2px;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.status-yellow { color: #facc15; } /* amarillo para iniciando/conectando */
+.status-green  { color: #22c55e; } /* verde para conectado */
+.status-red    { color: #ef4444; } /* rojo para desconectado */
+
 #overlay{
   display:none;
   position:fixed; top:0; left:0; right:0; bottom:0;
@@ -185,6 +197,11 @@ async function join(){
 	}
 
   localStorage.setItem("nick", nick);
+  
+  const statusEl = document.getElementById("status");
+  // Al iniciar servidor
+  statusEl.innerText = "Iniciando servidor...";
+  statusEl.className = "status-yellow";
 
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: "+room.slice(0,16);
@@ -199,12 +216,24 @@ async function join(){
   document.getElementById("status").innerText="Iniciando servidor...";
 
   socket = io("https://cccahahhthh.onrender.com");
-  coldTimer = setTimeout(()=>{ document.getElementById("status").innerText="Intentando conectar..."; },2000);
+  coldTimer = setTimeout(()=>{
+    statusEl.innerText = "Conectando...";
+    statusEl.className = "status-yellow";
+  }, 2000);
 
   socket.emit("join-room",{room,nick});
 
-  socket.on("connect", ()=>{ clearTimeout(coldTimer); });
-  socket.on("disconnect", ()=>{ document.getElementById("status").innerText="Desconectado"; });
+  socket.on("connect", ()=>{
+    clearTimeout(coldTimer);
+    statusEl.innerText = "Conectado";
+    statusEl.className = "status-green";
+  });
+  
+  // Desconectado
+  socket.on("disconnect", ()=>{
+    statusEl.innerText = "Desconectado";
+    statusEl.className = "status-red";
+  });
 
   socket.on("history", (messages)=>{
     document.getElementById("messages").innerHTML="";
