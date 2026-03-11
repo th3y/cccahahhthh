@@ -13,7 +13,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #login input:focus{outline:none;box-shadow:0 0 8px #2563eb;}
 #login button{width:100%;padding:14px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #login button:hover{background:#1e40af;}
-
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
 #header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;transition:0.3s;}
 #header b{font-size:18px;}
@@ -24,21 +23,18 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .status-red    { color: #ef4444; }
 #deleteBtn{background:#ef4444;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;transition:0.2s;}
 #deleteBtn:hover{background:#b91c1c;}
-
 #messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
 .message{padding:10px 14px;border-radius:12px;max-width:70%;display:flex;flex-direction:column;font-size:14px;opacity:0;transform:translateY(10px);animation:fadeIn 0.3s forwards;}
 .me{align-self:flex-end;background:#2563eb;}
 .other{align-self:flex-start;background:#1f2937;}
 .author{font-size:11px;opacity:0.7;margin-bottom:2px;}
 .timestamp{font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
-
 #inputArea{flex-shrink:0;display:flex;padding:10px;gap:10px;border-top:1px solid #1f2937;}
 #msg{flex:1;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
 #msg:focus{outline:none;box-shadow:0 0 8px #2563eb;}
 #sendBtn{padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
-
 #overlay{
   display:none;
   position:fixed; top:0; left:0; right:0; bottom:0;
@@ -49,7 +45,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   z-index:999;
   animation:fadeIn 0.5s forwards;
 }
-
 @keyframes fadeIn { to {opacity:1; transform:translateY(0);} }
 </style>
 </head>
@@ -86,17 +81,13 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
 
-document.getElementById("loginBtn").addEventListener("click", e => {
-  e.preventDefault(); // bloquea cualquier comportamiento default
-  join();
-});
-
 // -------------------- ESTADO --------------------
 let seenMessages = new Set();
 let socket;
 let room="", nick="";
 let coldTimer;
 let inactivityTimer;
+let reconnectInterval;
 
 // -------------------- DATOS CURIOSOS --------------------
 const motivationMessages = [
@@ -156,82 +147,12 @@ document.getElementById("loginBtn").addEventListener("click", join);
 document.getElementById("room").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ join(); } });
 document.getElementById("nick").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ join(); } });
 
-let reconnectInterval;
-
-function initSocket() {
-  socket = io("https://cccahahhthh.onrender.com", {
-    reconnection: false // controlamos nosotros la reconexión
-  });
-
-  // Mostrar conectando
-  statusEl.innerText = "Conectando...";
-  statusEl.className = "status-yellow";
-
-  // Ping periódico para verificar conexión
-  const pingInterval = setInterval(() => {
-    if(socket.connected){
-      socket.emit("ping-check", { room, nick });
-    }
-  }, 5000); // cada 5 segundos
-
-  socket.on("connect", () => {
-    clearTimeout(coldTimer);
-    clearInterval(reconnectInterval);
-    statusEl.innerText = "Conectado";
-    statusEl.className = "status-green";
-    console.log("Conectado al servidor");
-
-    // unirse a la sala
-    socket.emit("join-room",{ room, nick });
-  });
-
-  socket.on("disconnect", () => {
-    statusEl.innerText = "Desconectado";
-    statusEl.className = "status-red";
-
-    // intentar reconectar cada 3 segundos
-    reconnectInterval = setInterval(() => {
-      if(!socket.connected){
-        console.log("Intentando reconectar...");
-        initSocket();
-      }
-    }, 3000);
-  });
-
-  socket.on("history", (messages)=>{
-    document.getElementById("messages").innerHTML = "";
-    messages.forEach(m=>{
-      if(seenMessages.has(m.id)) return;
-      seenMessages.add(m.id);
-      addMessage(m.nick, m.text, m.time);
-    });
-  });
-
-  socket.on("message", (msg)=>{
-    if(seenMessages.has(msg.id)) return;
-    seenMessages.add(msg.id);
-    addMessage(msg.nick, msg.text, msg.time);
-  });
-
-  // ping-check respuesta
-  socket.on("pong-check", (data)=>{
-    // aquí podrías actualizar status u otra info
-    console.log("Pong recibido de", data.nick);
-  });
-}
-
-socket.on("ping-check", (data)=>{
-  socket.emit("pong-check", { nick: socket.nick, room: socket.room });
-});
-
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
-
   if(!nick){ alert("Ingresa un nick"); return; }
   if(!/^\d{3}$/.test(pass)){ alert("Contraseña inválida"); return; }
 
-  // Genera hash de la sala
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: " + room.slice(0,16);
 
@@ -241,28 +162,47 @@ async function join(){
   statusEl.innerText = "Iniciando servidor...";
   statusEl.className = "status-yellow";
 
-  // Inicializa socket
   initSocket();
+}
+
+// -------------------- SOCKET --------------------
+function initSocket(){
+  socket = io("https://cccahahhthh.onrender.com", { reconnection:false });
+
   coldTimer = setTimeout(()=>{
     statusEl.innerText = "Conectando...";
     statusEl.className = "status-yellow";
   },2000);
 
-  socket.emit("join-room",{room,nick});
+  // ping cada 5s
+  const pingInterval = setInterval(()=>{
+    if(socket.connected){
+      socket.emit("ping-check",{ room, nick });
+    }
+  },5000);
 
   socket.on("connect", ()=>{
     clearTimeout(coldTimer);
+    clearInterval(reconnectInterval);
     statusEl.innerText = "Conectado";
     statusEl.className = "status-green";
+
+    socket.emit("join-room",{ room, nick });
   });
 
   socket.on("disconnect", ()=>{
     statusEl.innerText = "Desconectado";
     statusEl.className = "status-red";
+
+    reconnectInterval = setInterval(()=>{
+      if(!socket.connected){
+        console.log("Intentando reconectar...");
+        initSocket();
+      }
+    },3000);
   });
 
-  // Recibir mensajes
-  socket.on("history", (messages)=>{
+  socket.on("history",(messages)=>{
     document.getElementById("messages").innerHTML = "";
     messages.forEach(m=>{
       if(seenMessages.has(m.id)) return;
@@ -271,10 +211,15 @@ async function join(){
     });
   });
 
-  socket.on("message", (msg)=>{
+  socket.on("message",(msg)=>{
     if(seenMessages.has(msg.id)) return;
     seenMessages.add(msg.id);
     addMessage(msg.nick,msg.text,msg.time);
+  });
+
+  socket.on("pong-check",(data)=>{
+    // se puede usar para actualizar estado u otra info
+    console.log("Pong recibido de",data.nick);
   });
 }
 
@@ -289,17 +234,18 @@ function addMessage(author,text,time){
 }
 
 // -------------------- ENVIAR --------------------
-msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
-msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ send(); } });
+msgInput.addEventListener("input",()=>{ sendBtn.disabled=!msgInput.value.trim(); });
+msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ send(); } });
 sendBtn.addEventListener("click", send);
+
 function send(){
   const text = msgInput.value.trim();
   if(!text || text.length>500) return;
   const msg = {id:Date.now()+"_"+Math.random(), room, nick, text, time:new Date().toISOString()};
-  socket.emit("message", msg);
-  msgInput.value = "";
-  sendBtn.disabled = true;
-  if(isMobile()){ msgInput.focus({preventScroll:false}); msgInput.scrollIntoView({behavior:"smooth", block:"end"}); }
+  socket.emit("message",msg);
+  msgInput.value="";
+  sendBtn.disabled=true;
+  if(isMobile()){ msgInput.focus({preventScroll:false}); msgInput.scrollIntoView({behavior:"smooth",block:"end"}); }
   resetInactivity();
 }
 
@@ -309,23 +255,19 @@ function showOverlay(){
   overlay.style.display="flex";
   overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
 }
-function hideOverlay(){
-  overlay.style.display="none";
-}
+function hideOverlay(){ overlay.style.display="none"; }
 
 // -------------------- INACTIVIDAD --------------------
 function resetInactivity(){
   clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(()=>{
-    showOverlay();
-  }, 50000);
+  inactivityTimer=setTimeout(showOverlay,50000);
 }
-window.addEventListener("mousemove", resetInactivity);
-window.addEventListener("keydown", resetInactivity);
-window.addEventListener("touchstart", resetInactivity);
+window.addEventListener("mousemove",resetInactivity);
+window.addEventListener("keydown",resetInactivity);
+window.addEventListener("touchstart",resetInactivity);
 
 // -------------------- TECLAS --------------------
-window.addEventListener("keydown", (e)=>{
+window.addEventListener("keydown",(e)=>{
   if(e.ctrlKey && e.key.toLowerCase()==="q"){
     if(isMobile()) return;
     if(chatEl.style.display==="flex" && overlay.style.display!=="flex"){ showOverlay(); }
@@ -334,9 +276,9 @@ window.addEventListener("keydown", (e)=>{
 });
 
 // -------------------- INICIALIZAR PAGINA --------------------
-window.addEventListener("load", ()=>{
-  const savedNick = localStorage.getItem("nick");
-  if(savedNick) document.getElementById("nick").value = savedNick;
+window.addEventListener("load",()=>{
+  const savedNick=localStorage.getItem("nick");
+  if(savedNick) document.getElementById("nick").value=savedNick;
   loginEl.style.display="block";
   chatEl.style.display="none";
   overlay.style.display="none";
