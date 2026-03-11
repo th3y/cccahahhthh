@@ -37,31 +37,24 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
 
-#motivationOverlay{
+#overlay{
   display:none;
-  position:fixed;
-  top:0; left:0; right:0; bottom:0;
+  position:fixed; top:0; left:0; right:0; bottom:0;
   background:#0b0f19;
   color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:24px;
-  text-align:center;
-  padding:20px;
+  display:flex; justify-content:center; align-items:center;
+  font-size:24px; text-align:center; padding:20px;
   z-index:999;
   animation:fadeIn 0.5s forwards;
 }
 
-@keyframes fadeIn {
-  to {opacity:1; transform:translateY(0);}
-}
+@keyframes fadeIn { to {opacity:1; transform:translateY(0);} }
 </style>
 </head>
 <body>
 
 <div id="login">
-<h2>Atun con chat</h2>
+<h2>Atun</h2>
 <input id="nick" placeholder="Tu nombre">
 <input id="room" type="password" placeholder="Clave de sala">
 <button id="loginBtn">Ingresar</button>
@@ -85,7 +78,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 </div>
 </div>
 
-<div id="motivationOverlay"></div>
+<div id="overlay"></div>
 
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
@@ -95,6 +88,7 @@ let socket;
 let room="", nick="";
 let coldTimer;
 
+// -------------------- DATOS CURIOSOS --------------------
 const motivationMessages = [
   "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
   "Los pulpos tienen tres corazones y su sangre es azul.",
@@ -127,19 +121,16 @@ const motivationMessages = [
   "Los delfines tienen nombres individuales con silbidos únicos para identificarse.",
   "La luz del Sol tarda aproximadamente 8 minutos en llegar a la Tierra."
 ];
-// -------------------- RECUPERAR ESTADO --------------------
-const hiddenState = localStorage.getItem("chatHidden") === "true";
 
 // -------------------- ELEMENTOS --------------------
 const loginEl = document.getElementById("login");
 const chatEl = document.getElementById("chat");
-const overlay = document.getElementById("motivationOverlay");
+const overlay = document.getElementById("overlay");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
 
 // -------------------- FUNCIONES --------------------
 function escapeHtml(text){ return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
 function addMessage(author,text,time){
   const el=document.createElement("div");
   el.className="message "+(author===nick?"me":"other");
@@ -148,7 +139,6 @@ function addMessage(author,text,time){
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({behavior:"smooth"});
 }
-
 function systemMsg(text){
   const el=document.createElement("div");
   el.style.fontSize="12px"; el.style.opacity="0.6"; el.style.textAlign="center";
@@ -157,7 +147,6 @@ function systemMsg(text){
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({behavior:"smooth"});
 }
-
 function saveLocalMessage(msg){
   const key="chat_"+room;
   let history=JSON.parse(localStorage.getItem(key)||"[]");
@@ -248,18 +237,16 @@ document.getElementById("deleteBtn").addEventListener("click", ()=>{
   socket.emit("delete-chat",{room,code});
 });
 
-// -------------------- OCULTAR / MOTIVACIÓN --------------------
-function showMotivation(){
+// -------------------- OCULTAR / MOSTRAR --------------------
+function showOverlay(){
   overlay.style.display="flex";
   overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
-  chatEl.style.display = "none";
-  loginEl.style.display = "none";
+  loginEl.style.display="none";
+  chatEl.style.display="none";
   localStorage.setItem("chatHidden","true");
 }
-
-function hideMotivation(){
+function hideOverlay(){
   overlay.style.display="none";
-  // mostrar según si el usuario ya estaba logueado
   if(localStorage.getItem("nick")){
     chatEl.style.display="flex";
   } else {
@@ -268,16 +255,14 @@ function hideMotivation(){
   localStorage.setItem("chatHidden","false");
 }
 
-if(hiddenState) showMotivation();
+// Inicializar overlay según estado guardado
+if(localStorage.getItem("chatHidden") === "true") showOverlay();
 
 // -------------------- TECLAS --------------------
 window.addEventListener("keydown", (e)=>{
-  if(e.ctrlKey && e.key.toLowerCase() === "c"){
-    if(overlay.style.display === "flex"){
-      hideMotivation();
-    } else {
-      showMotivation();
-    }
+  if(e.ctrlKey && e.key.toLowerCase() === "q"){
+    if(overlay.style.display === "flex"){ hideOverlay(); }
+    else { showOverlay(); }
   }
 });
 </script>
