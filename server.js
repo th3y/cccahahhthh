@@ -9,11 +9,11 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
+// estructura de salas
 const rooms = {};
 
 io.on("connection", (socket) => {
 
-  // UNIRSE A SALA
   socket.on("join-room", (data) => {
     const room = data.room;
     const nick = data.nick;
@@ -23,26 +23,31 @@ io.on("connection", (socket) => {
     socket.nick = nick;
 
     if (!rooms[room]) {
-      rooms[room] = { history: [], users: {} };
+      rooms[room] = {
+        history: [],
+        users: {}
+      };
     }
 
     rooms[room].users[socket.id] = nick;
 
-    // enviar historial completo
+    // enviar historial solo al usuario que entra
     socket.emit("history", rooms[room].history);
 
-    // avisar que alguien entró
+    // avisar a los demás que alguien entró
     socket.to(room).emit("user-joined", nick);
+
+    // actualizar lista de usuarios conectados para todos
+    io.to(room).emit("update-users", Object.values(rooms[room].users));
   });
 
-  // MENSAJE
+  // manejar mensaje nuevo
   socket.on("message", (data) => {
     const room = data.room;
     if (!rooms[room]) return;
 
-    // Guardar id, nick, texto y tiempo
     const msg = {
-      id: data.id,      // ahora se guarda el id
+      id: data.id,
       nick: data.nick,
       text: data.text,
       time: data.time
@@ -50,7 +55,7 @@ io.on("connection", (socket) => {
 
     rooms[room].history.push(msg);
 
-    // limitar historial
+    // limitar historial a 100 mensajes
     if (rooms[room].history.length > 100) {
       rooms[room].history.shift();
     }
@@ -58,7 +63,7 @@ io.on("connection", (socket) => {
     io.to(room).emit("message", msg);
   });
 
-  // BORRAR CHAT
+  // borrar chat
   socket.on("delete-chat", (data) => {
     const room = data.room;
     const code = data.code;
@@ -72,47 +77,7 @@ io.on("connection", (socket) => {
     io.to(room).emit("chat-deleted");
   });
 
-  // DESCONECTAR
-  socket.on("disconnect", () => {
-    const room = socket.room;
-    const nick = socket.nick;
-
-    if (!room || !rooms[room]) return;
-
-    delete rooms[room].users[socket.id];
-    socket.to(room).emit("user-left", nick);
-  });
-});
-
-
-io.on("connection", (socket) => {
-
-  // UNIRSE A SALA
-  socket.on("join-room", (data) => {
-    const room = data.room;
-    const nick = data.nick;
-
-    socket.join(room);
-    socket.room = room;
-    socket.nick = nick;
-
-    if (!rooms[room]) {
-      rooms[room] = { history: [], users: {} };
-    }
-
-    rooms[room].users[socket.id] = nick;
-
-    // enviar historial completo
-    socket.emit("history", rooms[room].history);
-
-    // avisar que alguien entró
-    socket.to(room).emit("user-joined", nick);
-
-    // enviar lista actualizada de usuarios conectados
-    io.to(room).emit("update-users", Object.values(rooms[room].users));
-  });
-
-  // DESCONECTAR
+  // desconectar usuario
   socket.on("disconnect", () => {
     const room = socket.room;
     const nick = socket.nick;
@@ -121,13 +86,13 @@ io.on("connection", (socket) => {
 
     delete rooms[room].users[socket.id];
 
+    // avisar a los demás que alguien se fue
     socket.to(room).emit("user-left", nick);
 
     // actualizar lista de usuarios conectados
     io.to(room).emit("update-users", Object.values(rooms[room].users));
   });
 
-  // ... resto del código (mensajes, delete-chat) permanece igual
 });
 
 server.listen(3000, () => {
