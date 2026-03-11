@@ -73,19 +73,12 @@ max-width:750px;
 background:#020617;
 }
 
-/* HEADER */
-
 #header{
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:14px 16px;
 border-bottom:1px solid #1e293b;
-}
-
-#header span{
-font-size:14px;
-opacity:0.8;
 }
 
 #deleteBtn{
@@ -97,8 +90,6 @@ border-radius:6px;
 cursor:pointer;
 font-size:13px;
 }
-
-/* MESSAGES */
 
 #messages{
 flex:1;
@@ -190,8 +181,6 @@ justify-content:center;
 
 <body>
 
-<!-- LOGIN -->
-
 <div id="login">
 
 <h2>Private Chat</h2>
@@ -204,16 +193,11 @@ justify-content:center;
 
 </div>
 
-<!-- CHAT -->
-
 <div id="chat">
 
 <div id="header">
-
 <span>Private conversation</span>
-
 <button id="deleteBtn" onclick="deleteChat()">Delete</button>
-
 </div>
 
 <div id="messages"></div>
@@ -228,8 +212,6 @@ justify-content:center;
 
 </div>
 
-<!-- SOCKET -->
-
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 
 <script>
@@ -239,14 +221,31 @@ const socket = io("https://cccahahhthh.onrender.com")
 let room=""
 let nick=""
 
+/* HASH SALA */
+
+async function hashRoom(password){
+
+const encoder = new TextEncoder()
+const data = encoder.encode(password)
+
+const hashBuffer = await crypto.subtle.digest("SHA-256",data)
+
+const hashArray = Array.from(new Uint8Array(hashBuffer))
+
+return hashArray.map(b=>b.toString(16).padStart(2,"0")).join("")
+
+}
+
 /* JOIN */
 
-function join(){
+async function join(){
 
-room=document.getElementById("room").value.trim()
+const password=document.getElementById("room").value.trim()
 nick=document.getElementById("nick").value.trim()
 
-if(!room || !nick) return
+if(!password || !nick) return
+
+room = await hashRoom(password)
 
 socket.emit("join-room",room)
 
@@ -255,7 +254,27 @@ document.getElementById("chat").style.display="flex"
 
 }
 
-/* SEND MESSAGE */
+/* HISTORIAL */
+
+socket.on("history",(messages)=>{
+
+messages.forEach(m=>{
+addMessage(m.text,m.time,m.nick===nick,m.nick)
+})
+
+})
+
+/* MENSAJES */
+
+socket.on("message",(data)=>{
+
+const isMe = data.nick === nick
+
+addMessage(data.text,data.time,isMe,data.nick)
+
+})
+
+/* ENVIAR */
 
 function send(){
 
@@ -276,16 +295,6 @@ nick:nick
 input.value=""
 
 }
-
-/* RECEIVE MESSAGE */
-
-socket.on("message",(data)=>{
-
-const isMe = data.nick === nick
-
-addMessage(data.text,data.time,isMe,data.nick)
-
-})
 
 /* ADD MESSAGE */
 
@@ -313,12 +322,12 @@ container.appendChild(timestamp)
 
 document.getElementById("messages").appendChild(container)
 
-document.getElementById("messages").scrollTop=
+document.getElementById("messages").scrollTop =
 document.getElementById("messages").scrollHeight
 
 }
 
-/* FORMAT TIME */
+/* FORMATO HORA */
 
 function formatTime(iso){
 
@@ -331,7 +340,7 @@ minute:"2-digit"
 
 }
 
-/* DELETE CHAT */
+/* BORRAR CHAT */
 
 function deleteChat(){
 
@@ -345,11 +354,21 @@ socket.emit("delete-chat",{room:room})
 
 }
 
-/* CLEAR CHAT */
+/* CLEAR */
 
 socket.on("clear",()=>{
 
 document.getElementById("messages").innerHTML=""
+
+})
+
+/* SALA LLENA */
+
+socket.on("room-full",()=>{
+
+alert("Room full")
+
+location.reload()
 
 })
 
