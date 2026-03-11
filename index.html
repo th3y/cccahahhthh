@@ -235,7 +235,14 @@ function addMessage(author,text,time){
 
 // -------------------- ENVIAR --------------------
 msgInput.addEventListener("input",()=>{ sendBtn.disabled=!msgInput.value.trim(); });
-msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ send(); } });
+//msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ send(); } });
+msgInput.addEventListener("keydown", (e) => {
+  if (!isMobile() && e.key === "Enter") { // en desktop, Enter envía
+    e.preventDefault();
+    send();
+  }
+});
+
 sendBtn.addEventListener("click", send);
 
 function send(){
@@ -283,6 +290,19 @@ window.addEventListener("load",()=>{
   chatEl.style.display="none";
   overlay.style.display="none";
   resetInactivity();
+});
+
+// -------------------- BORRAR CHAT --------------------
+const deleteBtn = document.getElementById("deleteBtn");
+deleteBtn.addEventListener("click", () => {
+  const code = prompt("Ingresa código de borrado"); // puedes pedir código de seguridad
+  if (!code) return;
+  socket.emit("delete-chat", { room, code });
+});
+
+// cuando el servidor confirma borrado
+socket.on("chat-deleted", () => {
+  document.getElementById("messages").innerHTML = "";
 });
 </script>
 </body>
