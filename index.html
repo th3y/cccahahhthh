@@ -48,7 +48,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <h2>Atun con chat</h2>
 <input id="nick" placeholder="Tu nombre">
 <input id="room" type="password" placeholder="Clave de sala">
-<button id="loginBtn" onclick="join()">Ingresar</button>
+<button id="loginBtn">Ingresar</button>
 </div>
 
 <div id="chat">
@@ -58,19 +58,20 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <div id="roomHash"></div>
 <div id="status">Iniciando servidor...</div>
 </div>
-<button id="deleteBtn" onclick="deleteChat()">Borrar</button>
+<button id="deleteBtn">Borrar</button>
 </div>
 
 <div id="messages"></div>
 
 <div id="inputArea">
 <input id="msg" placeholder="Escribe tu mensaje y presiona Enter" enterkeyhint="send">
-<button id="sendBtn" onclick="send()" disabled>Enviar</button>
+<button id="sendBtn" disabled>Enviar</button>
 </div>
 </div>
 
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
+// estado
 let seenMessages = new Set();
 let socket;
 let room="", nick="";
@@ -89,33 +90,43 @@ msgInput.addEventListener("input", ()=>{
   sendBtn.disabled = !msgInput.value.trim();
 });
 
-function join(){
+// HASH de la sala
+async function hashRoom(password){
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(password));
+  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
+// BOTÓN INGRESAR
+document.getElementById("loginBtn").addEventListener("click", async () => {
+    await join();
+});
+
+async function join(){
   nick = document.getElementById("nick").value.trim();
-  room = document.getElementById("room").value.trim();
-  if(!nick || !room) return;
+  const pass = document.getElementById("room").value.trim();
+  if(!nick || !pass) return;
   localStorage.setItem("nick", nick);
 
   const hashedRoom = await hashRoom(pass);
-  room = hashedRoom; // usar hash como ID interna
+  room = hashedRoom;
+  document.getElementById("roomHash").innerText = "Sala: "+hashedRoom.slice(0,16);
 
-  document.getElementById("roomHash").innerText = "Sala: " + hashedRoom.slice(0,16);
   document.getElementById("login").style.display="none";
   document.getElementById("chat").style.display="flex";
   document.getElementById("status").innerText="Iniciando servidor...";
 
   socket = io("https://cccahahhthh.onrender.com");
 
-  // timer inicial
-  coldTimer=setTimeout(()=>{ document.getElementById("status").innerText="Intentando conectar..."; },2000);
+  coldTimer = setTimeout(()=>{
+    document.getElementById("status").innerText="Intentando conectar...";
+  },2000);
 
   socket.emit("join-room",{room,nick});
 
-  socket.on("connect", ()=> {
-    clearTimeout(coldTimer);
-    document.getElementById("status").innerText="Conectado";
-  });
-
-  socket.on("disconnect", ()=>{ document.getElementById("status").innerText="Desconectado"; });
+  // SOCKETS
+  socket.on("connect", ()=> { clearTimeout(coldTimer); });
+  socket.on("disconnect", ()=> { document.getElementById("status").innerText="Desconectado"; });
 
   socket.on("history", (messages)=>{
     document.getElementById("messages").innerHTML="";
@@ -138,11 +149,10 @@ function join(){
   socket.on("user-joined", (n)=>{ systemMsg(n+" se unió."); });
   socket.on("user-left", (n)=>{ systemMsg(n+" se fue."); });
 
-  // actualizar lista de usuarios conectados en header
   socket.on("update-users", (users)=>{
     const statusEl = document.getElementById("status");
-    if(users.length === 0) statusEl.innerText = "Conectado (sin usuarios)";
-    else statusEl.innerText = "Conectado: " + users.join(", ");
+    if(users.length===0) statusEl.innerText="Conectado (sin usuarios)";
+    else statusEl.innerText="Conectado: "+users.join(", ");
   });
 
   socket.on("chat-deleted", ()=>{
@@ -151,6 +161,7 @@ function join(){
   });
 }
 
+// MENSAJES
 function send(){
   const text = msgInput.value.trim();
   if(!text || text.length>500) return;
@@ -198,20 +209,11 @@ function saveLocalMessage(msg){
   localStorage.setItem(key,JSON.stringify(history));
 }
 
-function deleteChat(){
+document.getElementById("deleteBtn").addEventListener("click", ()=>{
   const code=prompt("Delete code");
   if(!code) return;
   socket.emit("delete-chat",{room,code});
-}
-
-async function hashRoom(password){
-  const enc = new TextEncoder();
-  const buf = await crypto.subtle.digest("SHA-256", enc.encode(password));
-  return [...new Uint8Array(buf)]
-    .map(x => x.toString(16).padStart(2,"0"))
-    .join("");
-}
-
+});
 </script>
 </body>
 </html>
