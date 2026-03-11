@@ -146,9 +146,19 @@ async function join(){
     scrollDown();
   });
 
-  socket.on("user-joined", (n)=>{ systemMsg(n+" se unió."); });
-  socket.on("user-left", (n)=>{ systemMsg(n+" se fue."); });
-
+  // cuando alguien se une
+  socket.on("user-joined", (n) => {
+   // mostrar solo si NO es tu nick
+   if(n !== nick){
+  	 systemMsg(n + " se unió.");
+   }
+  });
+  
+  // cuando alguien se va
+  socket.on("user-left", (n) => {
+   systemMsg(n + " se fue.");
+  });
+  
   socket.on("update-users", (users)=>{
     const statusEl = document.getElementById("status");
     if(users.length===0) statusEl.innerText="Conectado (sin usuarios)";
