@@ -232,12 +232,17 @@ if(!text) return
 
 const time=new Date().toISOString()
 
+socket.emit("message",{
+room:room,
+text:text,
+time:time
+})
+
 addMessage(text,time,true)
 
 input.value=""
 
 }
-
 /* ADD MESSAGE */
 
 function addMessage(text,time,me){
