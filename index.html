@@ -15,11 +15,13 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #login button:hover{background:#1e40af;}
 
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
-
 #header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;transition:0.3s;}
 #header b{font-size:18px;}
 #roomHash{font-size:12px;opacity:0.6;}
-#status{font-size:11px;opacity:0.7;margin-top:2px;transition:0.3s;}
+#status{font-size:13px;font-weight:bold;margin-top:2px;transition:color 0.3s ease, opacity 0.3s ease;}
+.status-yellow { color: #facc15; }
+.status-green  { color: #22c55e; }
+.status-red    { color: #ef4444; }
 #deleteBtn{background:#ef4444;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;transition:0.2s;}
 #deleteBtn:hover{background:#b91c1c;}
 
@@ -36,18 +38,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #sendBtn{padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
-
-#status {
-  font-size: 13px;
-  font-weight: bold;
-  opacity: 1;
-  margin-top: 2px;
-  transition: color 0.3s ease, opacity 0.3s ease;
-}
-
-.status-yellow { color: #facc15; } /* amarillo para iniciando/conectando */
-.status-green  { color: #22c55e; } /* verde para conectado */
-.status-red    { color: #ef4444; } /* rojo para desconectado */
 
 #overlay{
   display:none;
@@ -66,11 +56,11 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <body>
 
 <div id="login">
-<h2>Atun</h2>
+<h2>Atun - Datos curiosos</h2>
 <input id="dummy" placeholder="Ingresa tu dato curioso">
 <input id="nick" placeholder="Nick">
 <input id="room" type="password" placeholder="Palabra aleatoria">
-<button id="loginBtn">Enviar dato curioso</button>
+<button id="loginBtn">Publicar dato curioso</button>
 </div>
 
 <div id="chat">
@@ -78,7 +68,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <div>
 <b>Atun</b>
 <div id="roomHash"></div>
-<div id="status">Iniciando servidor...</div>
+<div id="status" class="status-yellow">Iniciando...</div>
 </div>
 <button id="deleteBtn">Borrar</button>
 </div>
@@ -86,7 +76,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <div id="messages"></div>
 
 <div id="inputArea">
-<input id="msg" placeholder="Escribe tu mensaje y presiona Enter" enterkeyhint="send">
+<input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send">
 <button id="sendBtn" disabled>Enviar</button>
 </div>
 </div>
@@ -141,37 +131,11 @@ const chatEl = document.getElementById("chat");
 const overlay = document.getElementById("overlay");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
+const statusEl = document.getElementById("status");
 
 // -------------------- UTIL --------------------
-function isMobile(){
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-// -------------------- FUNCIONES --------------------
+function isMobile(){ return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
 function escapeHtml(text){ return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function addMessage(author,text,time){
-  const el=document.createElement("div");
-  el.className="message "+(author===nick?"me":"other");
-  const t=new Date(time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  el.innerHTML="<div class='author'>"+author+"</div><div>"+escapeHtml(text)+"</div><div class='timestamp'>"+t+"</div>";
-  document.getElementById("messages").appendChild(el);
-  el.scrollIntoView({behavior:"smooth"});
-}
-function systemMsg(text){
-  const el=document.createElement("div");
-  el.style.fontSize="12px"; el.style.opacity="0.6"; el.style.textAlign="center";
-  el.style.animation="fadeIn 0.3s forwards";
-  el.innerText=text;
-  document.getElementById("messages").appendChild(el);
-  el.scrollIntoView({behavior:"smooth"});
-}
-function saveLocalMessage(msg){
-  const key="chat_"+room;
-  let history=JSON.parse(localStorage.getItem(key)||"[]");
-  history.push(msg);
-  if(history.length>100) history.shift();
-  localStorage.setItem(key,JSON.stringify(history));
-}
 
 // -------------------- HASH --------------------
 async function hashRoom(password){
@@ -188,51 +152,38 @@ async function join(){
   const pass = document.getElementById("room").value.trim();
   if(!nick) return;
 
-  // Contraseña solo 3 cifras numéricas
-  const blockedPasswords = ["123", "000", "111", "999", "321", "666"];
-
-	if(!/^\d{3}$/.test(pass) || blockedPasswords.includes(pass)){
-		alert("Palabra invalida");
-		return;
-	}
+  const blockedPasswords = ["123","000","111","999","321","666"];
+  if(!/^\d{3}$/.test(pass) || blockedPasswords.includes(pass)){
+    alert("Palabra invalida");
+    return;
+  }
 
   localStorage.setItem("nick", nick);
-  
-  const statusEl = document.getElementById("status");
-  // Al iniciar servidor
-  statusEl.innerText = "Iniciando servidor...";
-  statusEl.className = "status-yellow";
-
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: "+room.slice(0,16);
 
-  // Overlay solo para PC/Tablet
-  const overlayActive = !isMobile() && localStorage.getItem("chatHidden")==="true";
-
   loginEl.style.display="none";
-  if(overlayActive){ overlay.style.display="flex"; chatEl.style.display="none"; }
-  else{ chatEl.style.display="flex"; }
+  chatEl.style.display="flex";
 
-  document.getElementById("status").innerText="Iniciando servidor...";
+  statusEl.innerText="Iniciando servidor...";
+  statusEl.className="status-yellow";
 
   socket = io("https://cccahahhthh.onrender.com");
   coldTimer = setTimeout(()=>{
-    statusEl.innerText = "Conectando...";
-    statusEl.className = "status-yellow";
-  }, 2000);
+    statusEl.innerText="Conectando...";
+    statusEl.className="status-yellow";
+  },2000);
 
   socket.emit("join-room",{room,nick});
 
   socket.on("connect", ()=>{
     clearTimeout(coldTimer);
-    statusEl.innerText = "Conectado";
-    statusEl.className = "status-green";
+    statusEl.innerText="Conectado";
+    statusEl.className="status-green";
   });
-  
-  // Desconectado
   socket.on("disconnect", ()=>{
-    statusEl.innerText = "Desconectado";
-    statusEl.className = "status-red";
+    statusEl.innerText="Desconectado";
+    statusEl.className="status-red";
   });
 
   socket.on("history", (messages)=>{
@@ -247,29 +198,23 @@ async function join(){
   socket.on("message", (msg)=>{
     if(seenMessages.has(msg.id)) return;
     seenMessages.add(msg.id);
-    saveLocalMessage(msg);
     addMessage(msg.nick,msg.text,msg.time);
-  });
-
-  socket.on("user-joined", (n)=>{ if(n !== nick){ systemMsg(n+" se unió."); } });
-  socket.on("user-left", (n)=>{ systemMsg(n+" se fue."); });
-
-  socket.on("update-users", (users)=>{
-    const statusEl = document.getElementById("status");
-    statusEl.innerText = users.length===0 ? "Conectado (sin usuarios)" : "Conectado: "+users.join(", ");
-  });
-
-  socket.on("chat-deleted", ()=>{
-    document.getElementById("messages").innerHTML="";
-    localStorage.removeItem("chat_"+room);
   });
 }
 
-// -------------------- ENVIAR --------------------
-msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
-sendBtn.addEventListener("click", send);
-msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+// -------------------- MENSAJE --------------------
+function addMessage(author,text,time){
+  const el=document.createElement("div");
+  el.className="message "+(author===nick?"me":"other");
+  const t=new Date(time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  el.innerHTML="<div class='author'>"+author+"</div><div>"+escapeHtml(text)+"</div><div class='timestamp'>"+t+"</div>";
+  document.getElementById("messages").appendChild(el);
+  el.scrollIntoView({behavior:"smooth"});
+}
 
+msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
+msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+sendBtn.addEventListener("click", send);
 function send(){
   const text = msgInput.value.trim();
   if(!text || text.length>500) return;
@@ -277,15 +222,8 @@ function send(){
   socket.emit("message", msg);
   msgInput.value = "";
   sendBtn.disabled = true;
-  focusMobileInput(); 
+  if(isMobile()){ msgInput.focus({preventScroll:false}); msgInput.scrollIntoView({behavior:"smooth", block:"end"}); }
 }
-
-// -------------------- BORRAR CHAT --------------------
-document.getElementById("deleteBtn").addEventListener("click", ()=>{
-  const code=prompt("Delete code");
-  if(!code) return;
-  socket.emit("delete-chat",{room,code});
-});
 
 // -------------------- OVERLAY --------------------
 function showOverlay(){
@@ -294,71 +232,41 @@ function showOverlay(){
   overlay.innerText = motivationMessages[Math.floor(Math.random()*motivationMessages.length)];
   localStorage.setItem("chatHidden","true");
 }
-
-function focusMobileInput(){
-  if(!isMobile()) return;
-  msgInput.focus({preventScroll:false}); // abre teclado en móvil
-  setTimeout(()=>{
-    msgInput.scrollIntoView({behavior:"smooth", block:"end"});
-  }, 300); // pequeño delay para asegurar que el teclado se muestre
-}
-
-function showChat(){
-  loginEl.style.display="none";
-  overlay.style.display="none";
-  chatEl.style.display="flex";
-  focusMobileInput();
-}
-
 function hideOverlay(){
   overlay.style.display="none";
-  const savedNick = localStorage.getItem("nick");
-  if(savedNick){ showChat(); }
-  else{ loginEl.style.display="block"; chatEl.style.display="none"; }
+  chatEl.style.display="flex";
   localStorage.setItem("chatHidden","false");
 }
+
 // -------------------- TECLAS --------------------
 window.addEventListener("keydown", (e)=>{
   if(e.ctrlKey && e.key.toLowerCase() === "q"){
     if(isMobile()) return;
-    if(chatEl.style.display !== "flex") return; // Ctrl+Q solo si chat está activo
+    if(chatEl.style.display !== "flex") return;
     if(overlay.style.display === "flex"){ hideOverlay(); }
     else{ showOverlay(); }
   }
 });
 
+// -------------------- INACTIVIDAD --------------------
+let inactivityTimer;
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  if(isMobile()) return;
+  inactivityTimer = setTimeout(()=>{ if(chatEl.style.display==="flex") showOverlay(); },60000);
+}
+["mousemove","keydown","mousedown","touchstart"].forEach(evt=>{ window.addEventListener(evt, resetInactivityTimer); });
+window.addEventListener("load", resetInactivityTimer);
+msgInput.addEventListener("focus", resetInactivityTimer);
+
 // -------------------- INICIALIZAR PAGINA --------------------
 window.addEventListener("load", ()=>{
   const savedNick = localStorage.getItem("nick");
   if(savedNick) document.getElementById("nick").value = savedNick;
-
-  // Al cargar siempre mostrar login, sin importar overlay previo
   loginEl.style.display="block";
   chatEl.style.display="none";
   overlay.style.display="none";
 });
-
-
-let inactivityTimer;
-function resetInactivityTimer(){
-  clearTimeout(inactivityTimer);
-  if(isMobile()) return; // no aplicar en móvil
-  inactivityTimer = setTimeout(()=>{
-    if(chatEl.style.display === "flex" && overlay.style.display !== "flex"){
-      showOverlay();
-    }
-  }, 50000);
-}
-
-// Escuchar interacciones del usuario
-["mousemove","keydown","mousedown","touchstart"].forEach(evt=>{
-  window.addEventListener(evt, resetInactivityTimer);
-});
-
-// Iniciar timer al cargar página y al ingresar al chat
-window.addEventListener("load", resetInactivityTimer);
-msgInput.addEventListener("focus", resetInactivityTimer);
-
 </script>
 </body>
 </html>
