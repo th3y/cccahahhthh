@@ -292,6 +292,28 @@ window.addEventListener("load", ()=>{
   chatEl.style.display="none";
   overlay.style.display="none";
 });
+
+
+let inactivityTimer;
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  if(isMobile()) return; // no aplicar en móvil
+  inactivityTimer = setTimeout(()=>{
+    if(chatEl.style.display === "flex" && overlay.style.display !== "flex"){
+      showOverlay();
+    }
+  }, 50000);
+}
+
+// Escuchar interacciones del usuario
+["mousemove","keydown","mousedown","touchstart"].forEach(evt=>{
+  window.addEventListener(evt, resetInactivityTimer);
+});
+
+// Iniciar timer al cargar página y al ingresar al chat
+window.addEventListener("load", resetInactivityTimer);
+msgInput.addEventListener("focus", resetInactivityTimer);
+
 </script>
 </body>
 </html>
