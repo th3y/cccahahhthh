@@ -40,7 +40,6 @@ box-shadow:0 15px 40px rgba(0,0,0,0.4);
 #login h2{
 text-align:center;
 margin-bottom:20px;
-font-weight:600;
 }
 
 #login input{
@@ -71,23 +70,27 @@ flex-direction:column;
 width:100%;
 max-width:750px;
 height:100dvh;
-background:#0b0f19;
 }
 
 /* HEADER */
 
 #header{
 flex-shrink:0;
+padding:12px 16px;
+border-bottom:1px solid #1f2937;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:14px;
-border-bottom:1px solid #1f2937;
+}
+
+#roomHash{
+font-size:12px;
+opacity:0.6;
 }
 
 #status{
-font-size:12px;
-opacity:0.6;
+font-size:11px;
+opacity:0.5;
 }
 
 #deleteBtn{
@@ -104,7 +107,7 @@ cursor:pointer;
 #messages{
 flex:1;
 overflow-y:auto;
-padding:20px;
+padding:18px;
 display:flex;
 flex-direction:column;
 gap:12px;
@@ -148,7 +151,6 @@ display:flex;
 padding:10px;
 gap:10px;
 border-top:1px solid #1f2937;
-background:#0b0f19;
 }
 
 #msg{
@@ -169,20 +171,6 @@ color:white;
 cursor:pointer;
 }
 
-/* MOBILE FIX */
-
-@media (max-width:600px){
-
-#messages{
-padding:14px;
-}
-
-.message{
-max-width:85%;
-}
-
-}
-
 </style>
 
 </head>
@@ -193,8 +181,9 @@ max-width:85%;
 
 <h2>Atun con chat</h2>
 
-<input id="nick" placeholder="Nick">
-<input id="room" type="password" placeholder="Contraseña">
+<input id="nick" placeholder="Usuario">
+
+<input id="room" type="password" placeholder="Clave">
 
 <button onclick="join()">Ingresar</button>
 
@@ -205,11 +194,14 @@ max-width:85%;
 <div id="header">
 
 <div>
+
 <b>Atun con chat</b>
+<div id="roomHash"></div>
 <div id="status">Conectando...</div>
+
 </div>
 
-<button id="deleteBtn" onclick="deleteChat()">Eliminar</button>
+<button id="deleteBtn" onclick="deleteChat()">Borrar</button>
 
 </div>
 
@@ -218,6 +210,7 @@ max-width:85%;
 <div id="inputArea">
 
 <input id="msg" placeholder="Type message" enterkeyhint="send">
+
 <button id="sendBtn" onclick="send()">Enviar</button>
 
 </div>
@@ -228,10 +221,23 @@ max-width:85%;
 
 <script>
 
+window.addEventListener("load",()=>{
+
+const savedNick = localStorage.getItem("nick")
+
+if(savedNick){
+document.getElementById("nick").value = savedNick
+}
+
+})
+
+let seenMessages = new Set()
+
 const socket = io("https://cccahahhthh.onrender.com")
 
 let room=""
 let nick=""
+let coldTimer
 
 /* HASH */
 
@@ -253,9 +259,20 @@ async function join(){
 nick=document.getElementById("nick").value.trim()
 const pass=document.getElementById("room").value.trim()
 
-if(!nick||!pass)return
+if(!nick || !pass) return
+localStorage.setItem("nick",nick)
 
-room=await hashRoom(pass)
+room = await hashRoom(pass)
+
+document.getElementById("roomHash").innerText="room: "+room.slice(0,16)
+
+loadLocalHistory()
+
+coldTimer=setTimeout(()=>{
+
+document.getElementById("status").innerText="Iniciando servidor..."
+
+},4000)
 
 socket.emit("join-room",{room,nick})
 
@@ -264,33 +281,35 @@ document.getElementById("chat").style.display="flex"
 
 }
 
+/* SOCKET STATUS */
 
 socket.on("connect",()=>{
 
-document.getElementById("status").innerText="Conectado"
+clearTimeout(coldTimer)
+
+document.getElementById("status").innerText="Connected"
 
 })
 
 socket.on("disconnect",()=>{
 
-document.getElementById("status").innerText="Desconectado"
+document.getElementById("status").innerText="Disconnected"
 
 })
 
-socket.io.on("reconnect_attempt",()=>{
-
-document.getElementById("status").innerText="Reconectando..."
-
-})
-
-
-/* HISTORIAL */
+/* HISTORIAL SERVER */
 
 socket.on("history",(messages)=>{
 
-document.getElementById("messages").innerHTML=""
+messages.forEach(m=>{
 
-messages.forEach(m=>addMessage(m.nick,m.text,m.time))
+if(seenMessages.has(m.id)) return
+
+seenMessages.add(m.id)
+
+addMessage(m.nick,m.text,m.time)
+
+})
 
 scrollDown()
 
@@ -300,9 +319,28 @@ scrollDown()
 
 socket.on("message",(msg)=>{
 
+if(seenMessages.has(msg.id)) return
+seenMessages.add(msg.id)
+
+saveLocalMessage(msg)
+
 addMessage(msg.nick,msg.text,msg.time)
 
 scrollDown()
+
+})
+
+/* USER JOIN */
+
+socket.on("user-joined",(n)=>{
+
+systemMsg(n+" ingreso")
+
+})
+
+socket.on("user-left",(n)=>{
+
+systemMsg(n+" salió")
 
 })
 
@@ -312,19 +350,7 @@ socket.on("chat-deleted",()=>{
 
 document.getElementById("messages").innerHTML=""
 
-})
-
-/* USER CONNECT */
-
-socket.on("user-joined",(n)=>{
-
-systemMsg(n+" ingresó")
-
-})
-
-socket.on("user-left",(n)=>{
-
-systemMsg(n+" se fue")
+localStorage.removeItem("chat_"+room)
 
 })
 
@@ -335,32 +361,40 @@ function send(){
 const input=document.getElementById("msg")
 const text=input.value.trim()
 
-if(!text)return
-if(text.length > 500) return
+if(!text) return
+if(text.length>500) return
 
-socket.emit("message",{
-room,
-nick,
-text,
+const msg={
+
+id: Date.now()+"_"+Math.random(),
+
+room:room,
+nick:nick,
+text:text,
 time:new Date().toISOString()
-})
+
+}
+
+socket.emit("message",msg)
 
 input.value=""
 
 }
 
-/* ENTER */
+/* ENTER SEND */
 
 document.getElementById("msg").addEventListener("keydown",(e)=>{
 
 if(e.key==="Enter"){
+
 e.preventDefault()
 send()
+
 }
 
 })
 
-/* MESSAGE RENDER */
+/* RENDER */
 
 function addMessage(author,text,time){
 
@@ -376,23 +410,14 @@ minute:'2-digit'
 el.innerHTML=
 
 "<div class='author'>"+author+"</div>"+
-"<div>"+escapeHtml(text)+"</div>"
+"<div>"+escapeHtml(text)+"</div>"+
 "<div class='timestamp'>"+t+"</div>"
 
 document.getElementById("messages").appendChild(el)
 
 }
 
-/* SYSTEM MSG */
-
-function escapeHtml(text){
-
-return text
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-
-}
+/* SYSTEM MESSAGE */
 
 function systemMsg(text){
 
@@ -423,13 +448,57 @@ box.scrollTop=box.scrollHeight
 
 }
 
-/* DELETE */
+/* SANITIZE */
+
+function escapeHtml(text){
+
+return text
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+
+}
+
+/* LOCAL HISTORY */
+
+function saveLocalMessage(msg){
+
+const key="chat_"+room
+
+let history=JSON.parse(localStorage.getItem(key)||"[]")
+
+history.push(msg)
+
+if(history.length>100){
+history.shift()
+}
+
+localStorage.setItem(key,JSON.stringify(history))
+
+}
+
+function loadLocalHistory(){
+
+const key="chat_"+room
+
+let history=JSON.parse(localStorage.getItem(key)||"[]")
+
+history.forEach(m=>{
+
+seenMessages.add(m.id)
+
+addMessage(m.nick,m.text,m.time)
+
+})
+
+}
+/* DELETE CHAT */
 
 function deleteChat(){
 
-const code=prompt("Codigo de eliminacion")
+const code=prompt("Delete code")
 
-if(!code)return
+if(!code) return
 
 socket.emit("delete-chat",{room,code})
 
