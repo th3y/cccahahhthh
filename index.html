@@ -156,6 +156,74 @@ document.getElementById("loginBtn").addEventListener("click", join);
 document.getElementById("room").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ join(); } });
 document.getElementById("nick").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ join(); } });
 
+let reconnectInterval;
+
+function initSocket() {
+  socket = io("https://cccahahhthh.onrender.com", {
+    reconnection: false // controlamos nosotros la reconexión
+  });
+
+  // Mostrar conectando
+  statusEl.innerText = "Conectando...";
+  statusEl.className = "status-yellow";
+
+  // Ping periódico para verificar conexión
+  const pingInterval = setInterval(() => {
+    if(socket.connected){
+      socket.emit("ping-check", { room, nick });
+    }
+  }, 5000); // cada 5 segundos
+
+  socket.on("connect", () => {
+    clearTimeout(coldTimer);
+    clearInterval(reconnectInterval);
+    statusEl.innerText = "Conectado";
+    statusEl.className = "status-green";
+    console.log("Conectado al servidor");
+
+    // unirse a la sala
+    socket.emit("join-room",{ room, nick });
+  });
+
+  socket.on("disconnect", () => {
+    statusEl.innerText = "Desconectado";
+    statusEl.className = "status-red";
+
+    // intentar reconectar cada 3 segundos
+    reconnectInterval = setInterval(() => {
+      if(!socket.connected){
+        console.log("Intentando reconectar...");
+        initSocket();
+      }
+    }, 3000);
+  });
+
+  socket.on("history", (messages)=>{
+    document.getElementById("messages").innerHTML = "";
+    messages.forEach(m=>{
+      if(seenMessages.has(m.id)) return;
+      seenMessages.add(m.id);
+      addMessage(m.nick, m.text, m.time);
+    });
+  });
+
+  socket.on("message", (msg)=>{
+    if(seenMessages.has(msg.id)) return;
+    seenMessages.add(msg.id);
+    addMessage(msg.nick, msg.text, msg.time);
+  });
+
+  // ping-check respuesta
+  socket.on("pong-check", (data)=>{
+    // aquí podrías actualizar status u otra info
+    console.log("Pong recibido de", data.nick);
+  });
+}
+
+socket.on("ping-check", (data)=>{
+  socket.emit("pong-check", { nick: socket.nick, room: socket.room });
+});
+
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
@@ -174,7 +242,7 @@ async function join(){
   statusEl.className = "status-yellow";
 
   // Inicializa socket
-  socket = io("https://cccahahhthh.onrender.com");
+  initSocket();
   coldTimer = setTimeout(()=>{
     statusEl.innerText = "Conectando...";
     statusEl.className = "status-yellow";
