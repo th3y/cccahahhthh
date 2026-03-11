@@ -202,6 +202,8 @@ max-width:85%;
 
 <script>
 
+const socket = io("https://cccahahhthh.onrender.com")
+
 let room=""
 
 function join(){
@@ -209,6 +211,8 @@ function join(){
 room=document.getElementById("room").value.trim()
 
 if(!room) return
+
+socket.emit("join-room",room)
 
 document.getElementById("login").style.display="none"
 document.getElementById("chat").style.display="flex"
