@@ -85,6 +85,12 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
+
+document.getElementById("loginBtn").addEventListener("click", e => {
+  e.preventDefault(); // bloquea cualquier comportamiento default
+  join();
+});
+
 // -------------------- ESTADO --------------------
 let seenMessages = new Set();
 let socket;
