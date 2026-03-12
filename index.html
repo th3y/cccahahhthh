@@ -522,7 +522,44 @@ let room="",nick="";
 let coldTimer,inactivityTimer;
 let replyTo = null;
 
-const motivationMessages=["El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.","Los pulpos tienen tres corazones y su sangre es azul.","El Sol representa más del 99% de la masa de nuestro sistema solar.","Los flamencos nacen grises y se vuelven rosados por su alimentación.","La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.","Un día en Venus dura más que un año en Venus.","Los tiburones existen desde antes que los árboles.","El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.","El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.","Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.","Las medusas existen desde hace más de 500 millones de años, antes que los dinosaurios.","El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones, fenómeno llamado efecto Mpemba.","Los gatos no pueden percibir sabores dulces.","Las abejas pueden reconocer rostros humanos.","Las vacas tienen mejores amigas y se estresan si se separan de ellas.","Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.","Los murciélagos siempre giran a la izquierda al salir de una cueva.","El diamante más grande jamás encontrado pesaba más de 3,100 quilates.","Los cocodrilos no pueden sacar la lengua.","Los escorpiones brillan bajo luz ultravioleta.","La luna se aleja de la Tierra aproximadamente 3.8 cm por año.","Los pulpos pueden usar herramientas y abrir frascos para obtener comida.","Los elefantes son los únicos animales que no pueden saltar.","Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: 7.","El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.","El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.","Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.","El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.","El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.","Los tiburones duermen con un ojo abierto y otro cerrado."];
+const motivationMessages=[
+"Los tardígrados pueden sobrevivir al vacío del espacio y a radiación extrema entrando en un estado llamado criptobiosis.",
+"Un cúmulo de nube típico puede pesar alrededor de un millón de toneladas debido a la enorme cantidad de microgotas de agua que contiene.",
+"La Antártida es técnicamente el desierto más grande del planeta porque recibe muy poca precipitación.",
+"Los wombats producen heces con forma de cubo casi perfecta, lo que evita que rueden cuando marcan territorio.",
+"Un estornudo puede expulsar aire a velocidades cercanas a 160 km/h.",
+"Júpiter tarda menos de 10 horas en completar una rotación, por lo que tiene uno de los días más cortos del sistema solar.",
+"El arrecife Great Barrier Reef es la estructura viva más grande del planeta y puede observarse desde el espacio.",
+"Las huellas dactilares de los koalas son tan similares a las humanas que pueden confundirse en análisis forenses.",
+"Algunas especies de caracol pueden permanecer en estado de hibernación durante varios años.",
+"El cerebro humano contiene aproximadamente 86 mil millones de neuronas.",
+"Mercurio tiene un día solar que dura aproximadamente 176 días terrestres.",
+"Los tardígrados han sobrevivido a experimentos reales en el vacío del espacio durante varios días.",
+"Un rayo puede alcanzar temperaturas de alrededor de 30,000 °C, más calientes que la superficie del Sol.",
+"Los árboles pueden intercambiar nutrientes y señales químicas a través de redes subterráneas de hongos llamadas micorrizas.",
+"La fosa de las Marianas alcanza profundidades cercanas a 11 kilómetros bajo el nivel del mar.",
+"Algunas bacterias pueden sobrevivir en ambientes extremadamente radiactivos reparando su ADN rápidamente.",
+"Los humanos comparten aproximadamente el 60% de los genes con los plátanos, aunque eso no significa que funcionen igual.",
+"El animal terrestre más rápido en aceleración es el guepardo, capaz de alcanzar cerca de 100 km/h en pocos segundos."
+"Un cúmulo de nube promedio puede pesar más de un millón de libras debido a la enorme cantidad de microgotas de agua suspendidas en el aire.",
+"Los wombats son los únicos animales conocidos que producen heces con forma de cubo.",
+"Una cucharadita de materia de una estrella de neutrones pesaría alrededor de 6 mil millones de toneladas en la Tierra.",
+"Los humanos reemplazan aproximadamente sus papilas gustativas cada dos semanas.",
+"Las bananas son técnicamente bayas, mientras que las fresas no lo son desde el punto de vista botánico.",
+"La Torre Eiffel puede crecer alrededor de 15 centímetros en verano debido a la expansión térmica del metal.",
+"El cuerpo humano emite una luz extremadamente débil debido a reacciones químicas en las células, aunque es invisible para el ojo humano.",
+"Las orugas literalmente se transforman en una masa líquida dentro del capullo antes de reorganizarse como mariposa.",
+"Las hormigas pueden formar puentes vivientes usando sus propios cuerpos para cruzar espacios.",
+"El ADN humano estirado de una sola célula mediría cerca de 2 metros de longitud.",
+"El animal llamado medusa Turritopsis dohrnii puede revertir su ciclo de vida y volver a un estado juvenil en ciertas condiciones.",
+"Cleopatra vivió más cerca del alunizaje de 1969 que de la construcción de la Gran Pirámide de Guiza.",
+"El desierto más grande del planeta es la Antártida, no el Sahara, porque recibe muy poca precipitación.",
+"Si dos piezas limpias del mismo metal se tocan en el vacío del espacio pueden soldarse entre sí sin necesidad de calor.",
+"Una nube típica pesa alrededor de un millón de libras aunque parezca ligera.",
+"El cerebro humano contiene aproximadamente 86 mil millones de neuronas.",
+"Algunas especies de caracol pueden dormir durante años en condiciones desfavorables.",
+"Los elefantes han mostrado comportamientos de duelo, permaneciendo cerca de los restos de miembros fallecidos de su grupo."
+];
 
 const loginEl = document.getElementById("login");
 const chatEl = document.getElementById("chat");
@@ -778,6 +815,7 @@ function send(){
   // Detener typing
   isTyping=false;
   clearTimeout(typingTimer);
+  clearTimeout(gifSuggestTimer);
   socket.emit("stop-typing",{room,nick});
   const msg={
     id:Date.now()+"_"+Math.random(),
@@ -881,19 +919,20 @@ function startSdCountdown(bubble,msgId,seconds){
   bubble.appendChild(timerEl);
   let remaining=seconds;
 
-  // Calcular duración de pulso según tiempo restante
+  // Duración del pulso basada en segundos absolutos restantes, no en ratio
+  // Así funciona igual de dramático con 3s que con 30s
   function getPulseDuration(rem){
-    const ratio=rem/seconds; // 1.0 → 0.0
-    if(ratio>0.6) return 1.5;
-    if(ratio>0.4) return 1.1;
-    if(ratio>0.25) return 0.7;
-    if(ratio>0.1) return 0.4;
-    return 0.2;
+    if(rem>7)  return 1.5;
+    if(rem>5)  return 1.1;
+    if(rem>3)  return 0.7;
+    if(rem>2)  return 0.4;
+    if(rem>1)  return 0.25;
+    return 0.15;
   }
 
   function updatePulse(rem){
     const dur=getPulseDuration(rem);
-    const anim=rem<=Math.ceil(seconds*0.25)?"sdPulseFast":"sdPulse";
+    const anim=rem<=3?"sdPulseFast":"sdPulse";
     bubble.style.animation=`${anim} ${dur}s ease-in-out infinite`;
   }
 
@@ -930,7 +969,7 @@ function renderSdMessage(el,msg,bubble){
 
   const hint=document.createElement("div");
   hint.className="sd-hint";
-  hint.innerHTML=`🔥 <span>Mensaje bomba - toca para mostrar</span>`;
+  hint.innerHTML=`🔥 <span>Mensaje secreto — toca para revelar</span>`;
   bubble.appendChild(hint);
 
   bubble.addEventListener("click",()=>{
