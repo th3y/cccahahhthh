@@ -465,11 +465,21 @@ function initSocket(){
   socket=io(SERVER_URL);
   coldTimer=setTimeout(()=>{statusEl.innerText="Conectando...";statusEl.className="status-yellow";},2000);
   socket.emit("join-room",{room,nick});
-  socket.on("connect",()=>{clearTimeout(coldTimer);statusEl.innerText="Conectado";statusEl.className="status-green";sendBtn.disabled=!msgInput.value.trim();});
+  
+  socket.on("connect",()=>{
+    clearTimeout(coldTimer);
+    statusEl.innerText="Conectado";
+    statusEl.className="status-green";
+    sendBtn.disabled=!msgInput.value.trim();
+    socket.emit("join-room",{room,nick});
+  });
+  
   socket.on("disconnect",()=>{statusEl.innerText="Desconectado";statusEl.className="status-red";sendBtn.disabled=true;});
   socket.on("history",(messages)=>{
     document.getElementById("messages").innerHTML="";
     messages.forEach(m=>{if(seenMessages.has(m.id))return;seenMessages.add(m.id);addMessage(m);});
+    const msgsEl=document.getElementById("messages");
+    msgsEl.scrollTop=msgsEl.scrollHeight;
   });
   socket.on("message",(msg)=>{
     if(seenMessages.has(msg.id))return;seenMessages.add(msg.id);addMessage(msg);

@@ -121,7 +121,7 @@ io.on("connection", (socket) => {
     };
 
     rooms[room].history.push(msg);
-    if (rooms[room].history.length > 100) rooms[room].history.shift();
+    if (rooms[room].history.length > 50) rooms[room].history.shift();
 
     io.to(room).emit("message", msg);
   });
