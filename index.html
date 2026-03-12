@@ -7,9 +7,11 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon.ico">
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto;}
 body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:center;align-items:center;}
+
 /* ---- LOGIN ---- */
 #login{width:100%;max-width:420px;background:#121826;padding:40px;border-radius:14px;box-shadow:0 15px 40px rgba(0,0,0,0.4);}
 #login h2{text-align:center;margin-bottom:20px;}
@@ -20,6 +22,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #loginError{color:#ef4444;font-size:13px;text-align:center;margin-top:8px;min-height:18px;}
 #loginStatus{font-size:12px;text-align:center;margin-top:6px;min-height:16px;color:#facc15;opacity:0;transition:opacity 0.4s;}
 #loginStatus.visible{opacity:1;}
+
 /* ---- CHAT ---- */
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
 #header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;}
@@ -29,13 +32,12 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .status-yellow{color:#facc15;}
 .status-green{color:#22c55e;}
 .status-red{color:#ef4444;}
-#headerBtns{display:flex;gap:8px;}
-#panicBtn{background:#f59e0b;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:14px;}
-#panicBtn:hover{background:#d97706;}
 #deleteBtn{background:#ef4444;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;}
 #deleteBtn:hover{background:#b91c1c;}
+
 /* ---- MENSAJES ---- */
 #messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+
 .message{
   padding:10px 14px;border-radius:12px;max-width:70%;
   display:flex;flex-direction:column;font-size:14px;
@@ -50,8 +52,10 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   font-size:12px;padding:4px 8px;border-radius:8px;opacity:0.8;
   cursor:default;
 }
+
 .author{font-size:11px;opacity:0.7;margin-bottom:2px;}
 .timestamp{font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
+
 /* ---- BOTON CITAR ---- */
 .reply-btn{
   position:absolute;
@@ -68,12 +72,13 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   padding:0;line-height:1;
 }
 .message.me .reply-btn{right:auto;left:-36px;}
-.message:hover .reply-btn,
-.reply-btn:hover{display:flex;}
+.message:hover .reply-btn{display:flex;}
 .reply-btn:hover{background:rgba(255,255,255,0.25);}
+/* Mobile: siempre visible */
 @media (hover: none){
   .reply-btn{display:flex;}
 }
+
 /* ---- CITA ---- */
 .reply-bubble{
   background:rgba(255,255,255,0.08);
@@ -86,15 +91,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 }
 .reply-bubble .reply-author{font-weight:bold;margin-bottom:2px;font-size:11px;}
 .reply-bubble .reply-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
-/* ---- ACCION ---- */
-.action-msg{
-  background:transparent !important;
-  align-self:center !important;
-  font-style:italic;
-  opacity:0.9;
-  max-width:90%;
-}
-.action-msg .timestamp{text-align:center;}
+
 /* ---- PREVIEW CITA ---- */
 #replyPreview{
   display:none;flex-shrink:0;
@@ -107,6 +104,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #replyPreviewAuthor{font-weight:bold;margin-right:4px;}
 #cancelReply{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
 #cancelReply:hover{color:white;}
+
 /* ---- INPUT ---- */
 #inputArea{flex-shrink:0;display:flex;padding:10px;gap:10px;border-top:1px solid #1f2937;}
 #msg{flex:1;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
@@ -114,6 +112,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #sendBtn{padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;}
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
+
 /* ---- TOAST ---- */
 #toast{
   position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -122,6 +121,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   pointer-events:none;z-index:100;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
 /* ---- OVERLAY ---- */
 #overlay{
   display:none;position:fixed;top:0;left:0;right:0;bottom:0;
@@ -129,24 +129,13 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   justify-content:center;align-items:center;
   font-size:24px;text-align:center;padding:20px;
   z-index:999;animation:fadeIn 0.5s forwards;
-  cursor:pointer;
 }
-/* ---- PANIC OVERLAY ---- */
-#panicOverlay{
-  display:none;position:fixed;top:0;left:0;right:0;bottom:0;
-  background:#0b0f19;color:white;
-  flex-direction:column;
-  justify-content:center;align-items:center;
-  gap:16px;
-  z-index:1000;
-  cursor:pointer;
-}
-#panicOverlay .panic-msg{font-size:20px;text-align:center;padding:20px;opacity:0.7;}
-#panicOverlay .panic-hint{font-size:13px;opacity:0.3;}
+
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
 </style>
 </head>
 <body>
+
 <!-- LOGIN -->
 <div id="login">
   <h2>Atun - Datos Curiosos</h2>
@@ -157,20 +146,20 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   <div id="loginError"></div>
   <div id="loginStatus"></div>
 </div>
+
 <!-- CHAT -->
 <div id="chat">
   <div id="header">
     <div>
       <b>Atun</b>
       <div id="roomHash"></div>
-      <div id="status" class="status-yellow">Despertando...</div>
+      <div id="status" class="status-yellow">Iniciando...</div>
     </div>
-    <div id="headerBtns">
-      <button id="panicBtn" title="Pánico">⚠️</button>
-      <button id="deleteBtn">Borrar</button>
-    </div>
+    <button id="deleteBtn">Borrar</button>
   </div>
+
   <div id="messages"></div>
+
   <div id="replyPreview">
     <div id="replyPreviewText">
       <span id="replyPreviewAuthor"></span>
@@ -178,18 +167,16 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
     </div>
     <button id="cancelReply" title="Cancelar">✕</button>
   </div>
+
   <div id="inputArea">
     <input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send">
     <button id="sendBtn" disabled>Enviar</button>
   </div>
 </div>
+
 <div id="toast"></div>
 <div id="overlay"></div>
-<!-- PANIC OVERLAY -->
-<div id="panicOverlay">
-  <div class="panic-msg" id="panicMsg"></div>
-  <div class="panic-hint">Toca para volver</div>
-</div>
+
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
 // -------------------- ESTADO --------------------
@@ -198,6 +185,7 @@ let socket;
 let room = "", nick = "";
 let coldTimer, inactivityTimer;
 let replyTo = null;
+
 const motivationMessages = [
   "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
   "Los pulpos tienen tres corazones y su sangre es azul.",
@@ -230,18 +218,20 @@ const motivationMessages = [
   "El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.",
   "Los tiburones duermen con un ojo abierto y otro cerrado."
 ];
+
 // -------------------- ELEMENTOS --------------------
-const loginEl      = document.getElementById("login");
-const chatEl       = document.getElementById("chat");
-const overlay      = document.getElementById("overlay");
-const panicOverlay = document.getElementById("panicOverlay");
-const msgInput     = document.getElementById("msg");
-const sendBtn      = document.getElementById("sendBtn");
-const statusEl     = document.getElementById("status");
-const toast        = document.getElementById("toast");
+const loginEl  = document.getElementById("login");
+const chatEl   = document.getElementById("chat");
+const overlay  = document.getElementById("overlay");
+const msgInput = document.getElementById("msg");
+const sendBtn  = document.getElementById("sendBtn");
+const statusEl = document.getElementById("status");
+const toast    = document.getElementById("toast");
+
 // -------------------- UTIL --------------------
 function isMobile(){ return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
 function escapeHtml(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
 function linkify(text){
   const escaped = escapeHtml(text);
   return escaped.replace(
@@ -249,20 +239,24 @@ function linkify(text){
     '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;opacity:0.85;word-break:break-all;">$1</a>'
   );
 }
+
 async function hashRoom(password){
   const enc = new TextEncoder();
   const buf = await crypto.subtle.digest("SHA-256", enc.encode(password));
   return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
 }
+
 function showToast(msg){
   toast.textContent = msg;
   toast.classList.add("show");
   setTimeout(()=> toast.classList.remove("show"), 3000);
 }
+
 // -------------------- LOGIN --------------------
 document.getElementById("loginBtn").addEventListener("click", join);
 document.getElementById("room").addEventListener("keydown", e => { if(e.key==="Enter") join(); });
 document.getElementById("nick").addEventListener("keydown", e => { if(e.key==="Enter") join(); });
+
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
@@ -271,16 +265,21 @@ async function join(){
   errEl.textContent = "";
   loginStatus.textContent = "";
   loginStatus.classList.remove("visible");
+
   if(!nick){ errEl.textContent = "Ingresa un nick"; return; }
   if(!pass){ errEl.textContent = "Ingresa un código"; return; }
+
   const btn = document.getElementById("loginBtn");
   btn.disabled = true;
   loginStatus.textContent = "Despertando al atun...";
   loginStatus.classList.add("visible");
+
   const slowTimer = setTimeout(() => {
-    loginStatus.textContent = "Despertando al atun, espera...";
+    loginStatus.textContent = "El atun se esta despertand, espera...";
   }, 3000);
+
   const tempSocket = io("https://cccahahhthh.onrender.com");
+
   tempSocket.on("connect", () => {
     clearTimeout(slowTimer);
     loginStatus.textContent = "Verificando código...";
@@ -295,6 +294,7 @@ async function join(){
       proceedToChat(pass);
     });
   });
+
   tempSocket.on("connect_error", () => {
     clearTimeout(slowTimer);
     tempSocket.disconnect();
@@ -303,35 +303,42 @@ async function join(){
     errEl.textContent = "Error de conexión";
   });
 }
+
 async function proceedToChat(pass){
   localStorage.setItem("nick", nick);
   room = await hashRoom(pass);
   document.getElementById("roomHash").innerText = "Sala: " + room.slice(0,16);
   loginEl.style.display = "none";
   chatEl.style.display = "flex";
-  statusEl.innerText = "Despertando al atun...";
+  statusEl.innerText = "Alimentando al atun...";
   statusEl.className = "status-yellow";
   initSocket();
 }
+
 // -------------------- SOCKET --------------------
 function initSocket(){
   socket = io("https://cccahahhthh.onrender.com");
+
   coldTimer = setTimeout(()=>{
     statusEl.innerText = "Conectando...";
     statusEl.className = "status-yellow";
   }, 2000);
+
   socket.emit("join-room", { room, nick });
+
   socket.on("connect", ()=>{
     clearTimeout(coldTimer);
     statusEl.innerText = "Conectado";
     statusEl.className = "status-green";
     sendBtn.disabled = !msgInput.value.trim();
   });
+
   socket.on("disconnect", ()=>{
     statusEl.innerText = "Desconectado";
     statusEl.className = "status-red";
     sendBtn.disabled = true;
   });
+
   socket.on("history", (messages)=>{
     document.getElementById("messages").innerHTML = "";
     messages.forEach(m => {
@@ -340,21 +347,26 @@ function initSocket(){
       addMessage(m);
     });
   });
+
   socket.on("message", (msg)=>{
     if(seenMessages.has(msg.id)) return;
     seenMessages.add(msg.id);
     addMessage(msg);
   });
+
   socket.on("user-joined", user => addSystemMessage(`${user} se ha unido`));
   socket.on("user-left",   user => addSystemMessage(`${user} se ha ido`));
+
   socket.on("chat-deleted", ()=>{
     document.getElementById("messages").innerHTML = "";
     showOverlay();
   });
+
   socket.on("rate-limited", data => {
     showToast(data.reason || "Demasiados mensajes");
   });
 }
+
 // -------------------- MENSAJES --------------------
 function addMessage(msg){
   const el = document.createElement("div");
@@ -363,7 +375,9 @@ function addMessage(msg){
   el.dataset.id = msg.id;
   el.dataset.nick = msg.nick;
   el.dataset.text = msg.text;
+
   const t = new Date(msg.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
   let replyHtml = "";
   if(msg.replyTo){
     replyHtml = `<div class="reply-bubble">
@@ -371,25 +385,25 @@ function addMessage(msg){
       <div class="reply-text">${escapeHtml(msg.replyTo.text)}</div>
     </div>`;
   }
-  const fmt = formatMessage(msg.text, msg.nick);
-  if(fmt.isAction){
-    el.classList.add("action-msg");
-  }
+
   el.innerHTML = `
-    ${fmt.isAction ? '' : '<div class="author">' + escapeHtml(msg.nick) + '</div>'}
+    <div class="author">${escapeHtml(msg.nick)}</div>
     ${replyHtml}
-    <div>${fmt.html}</div>
+    <div>${linkify(msg.text)}</div>
     <div class="timestamp">${t}</div>
-    ${fmt.isAction ? '' : '<button class="reply-btn" title="Citar">↩</button>'}
+    <button class="reply-btn" title="Citar">↩</button>
   `;
+
   const btn = el.querySelector(".reply-btn");
   btn.addEventListener("click", e => {
     e.stopPropagation();
     setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
   });
+
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({ behavior: "smooth" });
 }
+
 function addSystemMessage(text){
   const el = document.createElement("div");
   el.className = "message system";
@@ -397,6 +411,7 @@ function addSystemMessage(text){
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({ behavior: "smooth" });
 }
+
 // -------------------- CITA --------------------
 function setReply(id, replyNick, text){
   replyTo = { id, nick: replyNick, text };
@@ -405,62 +420,49 @@ function setReply(id, replyNick, text){
   document.getElementById("replyPreview").classList.add("active");
   msgInput.focus();
 }
+
 function clearReply(){
   replyTo = null;
   document.getElementById("replyPreview").classList.remove("active");
 }
+
 document.getElementById("cancelReply").addEventListener("click", clearReply);
+
 // -------------------- ENVIAR --------------------
 msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
 msgInput.addEventListener("keydown", e => { if(e.key === "Enter") send(); });
 sendBtn.addEventListener("click", send);
+
 function send(){
   const text = msgInput.value.trim();
   if(!text || text.length > 500) return;
+
   const msg = {
     id: Date.now() + "_" + Math.random(),
     room, nick, text,
     time: new Date().toISOString(),
     replyTo: replyTo || null
   };
+
   socket.emit("message", msg);
   msgInput.value = "";
   sendBtn.disabled = true;
   clearReply();
+
   if(isMobile()){
     msgInput.focus({ preventScroll: false });
     msgInput.scrollIntoView({ behavior: "smooth", block: "end" });
   }
   resetInactivity();
 }
+
 // -------------------- BORRAR --------------------
 document.getElementById("deleteBtn").addEventListener("click", ()=>{
   const code = prompt("Código de borrado");
   if(!code) return;
   socket.emit("delete-chat", { room, code });
 });
-// -------------------- PANICO --------------------
-document.getElementById("panicBtn").addEventListener("click", () => {
-  // Mensaje al chat
-  const panicText = `⚠️ ${nick} ha salido`;
-  const msg = {
-    id: Date.now() + "_" + Math.random(),
-    room, nick,
-    text: panicText,
-    time: new Date().toISOString(),
-    replyTo: null
-  };
-  socket.emit("message", msg);
 
-  // Mostrar en el overlay el mismo mensaje
-  document.getElementById("panicMsg").textContent = panicText;
-  panicOverlay.style.display = "flex";
-});
-
-// Click en panic overlay para volver
-panicOverlay.addEventListener("click", () => {
-  panicOverlay.style.display = "none";
-});
 // -------------------- OVERLAY --------------------
 function showOverlay(){
   if(isMobile()) return;
@@ -468,7 +470,7 @@ function showOverlay(){
   overlay.innerText = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
 }
 function hideOverlay(){ overlay.style.display = "none"; }
-overlay.addEventListener("click", hideOverlay);
+
 // -------------------- INACTIVIDAD --------------------
 function resetInactivity(){
   clearTimeout(inactivityTimer);
@@ -477,14 +479,15 @@ function resetInactivity(){
 window.addEventListener("mousemove", resetInactivity);
 window.addEventListener("keydown",   resetInactivity);
 window.addEventListener("touchstart",resetInactivity);
+
 window.addEventListener("keydown", e => {
   if(e.ctrlKey && e.key.toLowerCase() === "q"){
     if(isMobile()) return;
-    if(panicOverlay.style.display === "flex"){ panicOverlay.style.display = "none"; return; }
     if(chatEl.style.display === "flex" && overlay.style.display !== "flex") showOverlay();
     else hideOverlay();
   }
 });
+
 // -------------------- INIT --------------------
 window.addEventListener("load", ()=>{
   const savedNick = localStorage.getItem("nick");
@@ -492,7 +495,6 @@ window.addEventListener("load", ()=>{
   loginEl.style.display = "block";
   chatEl.style.display = "none";
   overlay.style.display = "none";
-  panicOverlay.style.display = "none";
   resetInactivity();
 });
 </script>
