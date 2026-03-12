@@ -14,7 +14,7 @@ const io = new Server(server, {
 // -------------------- CONFIG --------------------
 const VALID_CODES = (process.env.VALID_CODES || "").split(",").map(c => c.trim()).filter(Boolean);
 const DELETE_CODE = process.env.DELETE_CODE;
-const MIN_INTERVAL_MS = 500;
+const MIN_INTERVAL_MS = 450;
 
 // -------------------- UTIL --------------------
 const DATA_FILE = path.join(__dirname, "rooms.json");
