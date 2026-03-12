@@ -12,13 +12,9 @@ const io = new Server(server, {
 });
 
 // -------------------- CONFIG --------------------
-// En tu .env define: VALID_CODES=abc,xyz,room1
-// Y DELETE_CODE=tucodigosecreto
 const VALID_CODES = (process.env.VALID_CODES || "").split(",").map(c => c.trim()).filter(Boolean);
 const DELETE_CODE = process.env.DELETE_CODE;
-
-// Rate limiting config
-const MIN_INTERVAL_MS = 500; // mínimo 500ms entre mensajes por usuario
+const MIN_INTERVAL_MS = 500;
 
 // -------------------- UTIL --------------------
 const DATA_FILE = path.join(__dirname, "rooms.json");
@@ -43,7 +39,6 @@ function saveRooms(rooms) {
 }
 
 // -------------------- RATE LIMITER --------------------
-// Map: socketId -> lastMessageTimestamp
 const rateLimitMap = new Map();
 
 function initRateLimit(socketId) {
@@ -61,9 +56,20 @@ function checkRateLimit(socketId) {
 // -------------------- ROOMS --------------------
 let rooms = loadRooms();
 
+// Guardado periódico cada 15s
 setInterval(() => {
   saveRooms(rooms);
 }, 15000);
+
+// Limpieza automática cada 24h — borra historial y notifica a todos los conectados
+setInterval(() => {
+  for (const roomId of Object.keys(rooms)) {
+    rooms[roomId].history = [];
+    io.to(roomId).emit("chat-deleted");
+  }
+  saveRooms(rooms);
+  console.log("[Limpieza] Historial de todas las salas eliminado.");
+}, 24 * 60 * 60 * 1000);
 
 // -------------------- SOCKET.IO --------------------
 io.on("connection", (socket) => {
@@ -71,7 +77,6 @@ io.on("connection", (socket) => {
   // ---------- VALIDAR CÓDIGO DE ACCESO ----------
   socket.on("validate-code", (data, callback) => {
     const { code } = data;
-    // Si no hay códigos configurados en .env, bloquear todo
     if (VALID_CODES.length === 0) {
       return callback({ ok: false, reason: "no_codes_configured" });
     }
@@ -105,7 +110,6 @@ io.on("connection", (socket) => {
     const room = data.room;
     if (!rooms[room]) return;
 
-    // Rate limit check
     if (!checkRateLimit(socket.id)) {
       socket.emit("rate-limited", { reason: "Demasiados mensajes. Espera un momento." });
       return;
@@ -116,8 +120,7 @@ io.on("connection", (socket) => {
       nick: data.nick,
       text: data.text,
       time: data.time,
-      // Mensaje citado (opcional)
-      replyTo: data.replyTo || null  // { id, nick, text }
+      replyTo: data.replyTo || null
     };
 
     rooms[room].history.push(msg);
