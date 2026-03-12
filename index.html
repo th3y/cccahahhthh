@@ -7,11 +7,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon.ico">
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto;}
 body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:center;align-items:center;}
-
 /* ---- LOGIN ---- */
 #login{width:100%;max-width:420px;background:#121826;padding:40px;border-radius:14px;box-shadow:0 15px 40px rgba(0,0,0,0.4);}
 #login h2{text-align:center;margin-bottom:20px;}
@@ -22,7 +20,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #loginError{color:#ef4444;font-size:13px;text-align:center;margin-top:8px;min-height:18px;}
 #loginStatus{font-size:12px;text-align:center;margin-top:6px;min-height:16px;color:#facc15;opacity:0;transition:opacity 0.4s;}
 #loginStatus.visible{opacity:1;}
-
 /* ---- CHAT ---- */
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
 #header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;}
@@ -34,68 +31,87 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .status-red{color:#ef4444;}
 #deleteBtn{background:#ef4444;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;}
 #deleteBtn:hover{background:#b91c1c;}
-
+#headerBtns{display:flex;gap:8px;align-items:center;}
+#panicBtn{background:#7c3aed;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s,transform 0.1s;}
+#panicBtn:hover{background:#6d28d9;}
+#panicBtn:active{transform:scale(0.92);}
+#soundToggle{background:#1f2937;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s;}
+#soundToggle:hover{background:#374151;}
+#soundToggle.muted{opacity:0.4;}
 /* ---- MENSAJES ---- */
 #messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
-
 .message{
-  padding:10px 14px;border-radius:12px;max-width:70%;
-  display:flex;flex-direction:column;font-size:14px;
+  max-width:80%;
+  display:flex;flex-direction:column;
   opacity:0;transform:translateY(10px);
   animation:fadeIn 0.3s forwards;
-  position:relative;
 }
-.me{align-self:flex-end;background:#2563eb;}
-.other{align-self:flex-start;background:#1f2937;}
+.me{align-self:flex-end;}
+.other{align-self:flex-start;}
 .message.system{
   align-self:center;background:#374151;font-style:italic;
   font-size:12px;padding:4px 8px;border-radius:8px;opacity:0.8;
   cursor:default;
 }
-
-.author{font-size:11px;opacity:0.7;margin-bottom:2px;}
+.author{font-size:11px;opacity:0.7;margin-bottom:2px;font-weight:700;}
 .timestamp{font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
-
 /* ---- BOTON CITAR ---- */
+/* msg-row es relativo: el botón es absoluto para no afectar el layout */
+.msg-row{
+  position:relative;
+}
+
+/* La burbuja */
+.msg-bubble{
+  padding:10px 16px;
+  border-radius:12px;
+  display:inline-flex;flex-direction:column;
+  font-size:14px;
+  min-width:160px;
+  max-width:100%;
+  word-break:break-word;
+  overflow-wrap:break-word;
+  box-sizing:border-box;
+}
+.message.me .msg-bubble{background:#2563eb;}
+.message.other .msg-bubble{background:#1f2937;}
+/* Botón reply: absoluto, no afecta el ancho del row */
 .reply-btn{
   position:absolute;
   top:50%;transform:translateY(-50%);
-  right:-36px;
-  background:rgba(255,255,255,0.1);
-  border:none;color:white;
-  border-radius:50%;
-  width:28px;height:28px;
-  cursor:pointer;font-size:14px;
-  display:none;
-  align-items:center;justify-content:center;
-  transition:background 0.15s;
+  background:rgba(255,255,255,0.12);border:none;color:white;
+  border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;
+  display:none;align-items:center;justify-content:center;
+  transition:background 0.15s, transform 0.1s;
   padding:0;line-height:1;
+  z-index:1;
 }
-.message.me .reply-btn{right:auto;left:-36px;}
-.message:hover .reply-btn{display:flex;}
-.reply-btn:hover{background:rgba(255,255,255,0.25);}
-/* Mobile: siempre visible */
-@media (hover: none){
-  .reply-btn{display:flex;}
+/* Posición del botón según lado */
+.message.other .reply-btn{right:-36px;}
+.message.me .reply-btn{left:-36px;}
+/* Mostrar en hover del row — pseudo extendido para no perder hover */
+.msg-row::after{
+  content:'';
+  position:absolute;
+  top:0;bottom:0;
+  width:40px;
+  pointer-events:auto;
 }
-
+.message.other .msg-row::after{right:-40px;}
+.message.me .msg-row::after{left:-40px;}
+.msg-row:hover .reply-btn{display:flex;}
+.reply-btn:hover{background:rgba(255,255,255,0.28);transform:scale(1.1) translateY(-50%);}
+@media (hover: none){.reply-btn{display:flex;}}
 /* ---- CITA ---- */
 .reply-bubble{
-  background:rgba(255,255,255,0.08);
-  border-left:3px solid rgba(255,255,255,0.4);
-  border-radius:6px;
-  padding:5px 8px;
-  margin-bottom:6px;
-  font-size:12px;
-  opacity:0.85;
+  background:rgba(255,255,255,0.08);border-left:3px solid rgba(255,255,255,0.4);
+  border-radius:6px;padding:5px 8px;margin-bottom:6px;font-size:12px;opacity:0.85;
 }
 .reply-bubble .reply-author{font-weight:bold;margin-bottom:2px;font-size:11px;}
-.reply-bubble .reply-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
-
+.reply-bubble .reply-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 /* ---- PREVIEW CITA ---- */
 #replyPreview{
-  display:none;flex-shrink:0;
-  padding:8px 16px;background:#1a2235;
+  display:none;flex-shrink:0;padding:8px 16px;background:#1a2235;
   border-top:1px solid #1f2937;border-left:3px solid #2563eb;
   font-size:13px;align-items:center;gap:10px;
 }
@@ -104,14 +120,163 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #replyPreviewAuthor{font-weight:bold;margin-right:4px;}
 #cancelReply{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
 #cancelReply:hover{color:white;}
-
-/* ---- INPUT ---- */
-#inputArea{flex-shrink:0;display:flex;padding:10px;gap:10px;border-top:1px solid #1f2937;}
+/* ---- INPUT AREA ---- */
+#inputArea{flex-shrink:0;display:flex;padding:10px;gap:8px;border-top:1px solid #1f2937;position:relative;}
 #msg{flex:1;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
 #msg:focus{outline:none;box-shadow:0 0 8px #2563eb;}
 #sendBtn{padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;}
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
+
+/* ---- GIF BUTTON ---- */
+#gifBtn{
+  flex-shrink:0;padding:0 10px;border:none;border-radius:8px;
+  background:#1f2937;color:#22d3ee;cursor:pointer;
+  font-size:11px;font-weight:800;letter-spacing:0.05em;
+  line-height:1;transition:background 0.2s;height:44px;
+}
+#gifBtn:hover{background:#374151;}
+#gifBtn.active{background:#0e7490;color:white;}
+
+/* ---- GIF PICKER ---- */
+#gifPicker{
+  position:absolute;bottom:calc(100% + 8px);left:10px;
+  width:320px;max-width:calc(100vw - 20px);
+  background:#1a2235;border:1px solid #2d3748;
+  border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  z-index:200;overflow:hidden;display:none;flex-direction:column;
+  animation:pickerIn 0.18s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+#gifPicker.open{display:flex;}
+#gifHeader{padding:10px 10px 6px;display:flex;align-items:center;gap:8px;}
+#gifSearch{
+  flex:1;padding:8px 12px;border:none;border-radius:8px;
+  background:#0b0f19;color:white;font-size:13px;outline:none;
+  border:1px solid transparent;transition:border 0.2s;
+}
+#gifSearch:focus{border-color:#22d3ee;}
+#gifSearch::placeholder{color:#4b5563;}
+#gifPowered{font-size:10px;color:#4b5563;white-space:nowrap;flex-shrink:0;}
+#gifGrid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:6px;padding:0 8px 8px;
+  overflow-y:auto;max-height:260px;
+  scrollbar-width:thin;scrollbar-color:#374151 transparent;
+}
+#gifGrid::-webkit-scrollbar{width:4px;}
+#gifGrid::-webkit-scrollbar-thumb{background:#374151;border-radius:4px;}
+.gif-item{
+  border-radius:8px;overflow:hidden;cursor:pointer;
+  background:#0b0f19;
+  transition:opacity 0.15s;
+  height:90px;
+}
+.gif-item:active{opacity:0.7;}
+.gif-item img{width:100%;height:100%;object-fit:cover;display:block;}
+#gifLoading{text-align:center;padding:20px;color:#6b7280;font-size:13px;}
+@media (max-width:480px){
+  #gifPicker{width:calc(100vw - 20px);}
+  #gifGrid{max-height:200px;}
+  .gif-item{height:75px;}
+}
+
+/* GIF en burbuja */
+.msg-gif{
+  border-radius:8px;overflow:hidden;max-width:220px;
+  margin-top:4px;cursor:pointer;
+}
+.msg-gif img{width:100%;display:block;border-radius:8px;}
+
+/* ---- EMOJI BUTTON ---- */
+#emojiBtn{
+  flex-shrink:0;
+  padding:0 12px;
+  border:none;border-radius:8px;
+  background:#1f2937;color:white;
+  cursor:pointer;font-size:20px;
+  line-height:1;transition:background 0.2s;
+  display:flex;align-items:center;justify-content:center;
+}
+#emojiBtn:hover{background:#374151;}
+#emojiBtn.active{background:#2563eb;}
+
+/* ---- EMOJI PICKER ---- */
+#emojiPicker{
+  position:absolute;
+  bottom:calc(100% + 8px);
+  left:10px;
+  width:320px;
+  max-width:calc(100vw - 20px);
+  background:#1a2235;
+  border:1px solid #2d3748;
+  border-radius:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  z-index:200;
+  overflow:hidden;
+  display:none;
+  flex-direction:column;
+  animation:pickerIn 0.18s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+#emojiPicker.open{display:flex;}
+@keyframes pickerIn{
+  from{opacity:0;transform:translateY(10px) scale(0.97);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+
+/* Search */
+#emojiSearch{
+  margin:10px 10px 6px;
+  padding:8px 12px;
+  border:none;border-radius:8px;
+  background:#0b0f19;color:white;
+  font-size:13px;outline:none;
+  border:1px solid transparent;transition:border 0.2s;
+}
+#emojiSearch:focus{border-color:#2563eb;}
+#emojiSearch::placeholder{color:#4b5563;}
+
+/* Category tabs */
+#emojiTabs{
+  display:flex;overflow-x:auto;gap:2px;padding:0 8px 6px;
+  scrollbar-width:none;
+}
+#emojiTabs::-webkit-scrollbar{display:none;}
+.emoji-tab{
+  flex-shrink:0;padding:4px 8px;border:none;border-radius:6px;
+  background:transparent;color:#9ca3af;cursor:pointer;
+  font-size:18px;transition:background 0.15s,color 0.15s;
+}
+.emoji-tab:hover{background:#2d3748;color:white;}
+.emoji-tab.active{background:#2563eb;color:white;}
+
+/* Recents row */
+#emojiRecentsSection{padding:0 8px 4px;}
+#emojiRecentsLabel{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;padding-left:2px;}
+#emojiRecentsGrid{display:flex;flex-wrap:wrap;gap:2px;}
+
+/* Divider */
+.emoji-divider{height:1px;background:#2d3748;margin:4px 8px 6px;}
+
+/* Main grid */
+#emojiBody{
+  flex:1;overflow-y:auto;padding:0 8px 8px;
+  max-height:200px;
+  scrollbar-width:thin;scrollbar-color:#374151 transparent;
+}
+#emojiBody::-webkit-scrollbar{width:4px;}
+#emojiBody::-webkit-scrollbar-thumb{background:#374151;border-radius:4px;}
+#emojiGrid{display:flex;flex-wrap:wrap;gap:2px;}
+
+/* Individual emoji */
+.emoji-item{
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;border-radius:8px;cursor:pointer;
+  transition:background 0.1s,transform 0.1s;
+  border:none;background:transparent;
+  user-select:none;
+}
+.emoji-item:hover{background:#2d3748;transform:scale(1.2);}
+.emoji-item:active{transform:scale(0.95);}
 
 /* ---- TOAST ---- */
 #toast{
@@ -121,7 +286,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   pointer-events:none;z-index:100;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
 /* ---- OVERLAY ---- */
 #overlay{
   display:none;position:fixed;top:0;left:0;right:0;bottom:0;
@@ -130,12 +294,16 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   font-size:24px;text-align:center;padding:20px;
   z-index:999;animation:fadeIn 0.5s forwards;
 }
-
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
+
+/* Mobile adjustments */
+@media (max-width: 480px){
+  #emojiPicker{width:calc(100vw - 20px);left:10px;}
+  #emojiBody{max-height:160px;}
+}
 </style>
 </head>
 <body>
-
 <!-- LOGIN -->
 <div id="login">
   <h2>Atun - Datos Curiosos</h2>
@@ -146,7 +314,6 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   <div id="loginError"></div>
   <div id="loginStatus"></div>
 </div>
-
 <!-- CHAT -->
 <div id="chat">
   <div id="header">
@@ -155,11 +322,13 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
       <div id="roomHash"></div>
       <div id="status" class="status-yellow">Iniciando...</div>
     </div>
-    <button id="deleteBtn">Borrar</button>
+    <div id="headerBtns">
+      <button id="soundToggle" title="Sonido de notificación">🔔</button>
+      <button id="panicBtn" title="Botón de pánico">🚨</button>
+      <button id="deleteBtn">Borrar</button>
+    </div>
   </div>
-
   <div id="messages"></div>
-
   <div id="replyPreview">
     <div id="replyPreviewText">
       <span id="replyPreviewAuthor"></span>
@@ -167,25 +336,377 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
     </div>
     <button id="cancelReply" title="Cancelar">✕</button>
   </div>
-
   <div id="inputArea">
-    <input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send">
+    <!-- EMOJI PICKER PANEL -->
+    <div id="emojiPicker">
+      <input id="emojiSearch" placeholder="Buscar emoji..." autocomplete="off" spellcheck="false">
+      <!-- Recientes -->
+      <div id="emojiRecentsSection" style="display:none;">
+        <div id="emojiRecentsLabel">Más usados</div>
+        <div id="emojiRecentsGrid"></div>
+      </div>
+      <div class="emoji-divider" id="recentsDivider" style="display:none;"></div>
+      <!-- Tabs por categoría -->
+      <div id="emojiTabs"></div>
+      <!-- Grid principal -->
+      <div id="emojiBody">
+        <div id="emojiGrid"></div>
+      </div>
+    </div>
+    <!-- GIF PICKER -->
+    <div id="gifPicker">
+      <div id="gifHeader">
+        <input id="gifSearch" placeholder="Buscar GIF..." autocomplete="off" spellcheck="false">
+        <span id="gifPowered">via GIPHY</span>
+      </div>
+      <div id="gifGrid"></div>
+      <div id="gifLoading" style="display:none;">Buscando...</div>
+    </div>
+    <button id="emojiBtn" title="Emojis">😊</button>
+    <button id="gifBtn" title="GIF">GIF</button>
+    <input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send" maxlength="450">
     <button id="sendBtn" disabled>Enviar</button>
   </div>
 </div>
-
 <div id="toast"></div>
 <div id="overlay"></div>
-
 <script src="https://cccahahhthh.onrender.com/socket.io/socket.io.js"></script>
 <script>
-// -------------------- ESTADO --------------------
+// ==================== EMOJI DATA ====================
+const EMOJI_CATEGORIES = [
+  {
+    icon: "😀", label: "Caras",
+    emojis: ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","😟","🙁","☹️","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖"]
+  },
+  {
+    icon: "👋", label: "Gestos",
+    emojis: ["👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🫀","🫁","🧠","🦷","🦴","👀","👁","👅","👄","💋","🩸"]
+  },
+  {
+    icon: "❤️", label: "Corazones",
+    emojis: ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☯️","🕊","🌈","💫","⭐","🌟","✨","💥","🔥","❄️","🌊","💧","🫧"]
+  },
+  {
+    icon: "🐶", label: "Animales",
+    emojis: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🙈","🙉","🙊","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🦟","🦗","🕷","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦬","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮","🐕‍🦺","🐈","🐈‍⬛","🪶","🐓","🦃","🦤","🦚","🦜","🦢","🦩","🕊","🐇","🦝","🦨","🦡","🦫","🦦","🦥","🐁","🐀","🐿","🦔"]
+  },
+  {
+    icon: "🍕", label: "Comida",
+    emojis: ["🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶","🫑","🧄","🧅","🥔","🍠","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🌭","🍔","🍟","🍕","🫓","🥪","🥙","🧆","🌮","🌯","🫔","🥗","🥘","🫕","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🦪","🍤","🍙","🍚","🍘","🍥","🥮","🍢","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜","🍯","🧃","🥤","🧋","🍵","☕","🫖","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊","🥄","🍴","🍽","🥢"]
+  },
+  {
+    icon: "⚽", label: "Deporte",
+    emojis: ["⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🥍","🏑","🏏","🪃","🥅","⛳","🪁","🏹","🎣","🤿","🥊","🥋","🎽","🛹","🛼","🛷","⛸","🥌","🎿","⛷","🏂","🪂","🏋","🤼","🤸","⛹","🤺","🏇","🧘","🏄","🏊","🚴","🏆","🥇","🥈","🥉","🏅","🎖","🏵","🎗","🎟","🎫"]
+  },
+  {
+    icon: "🚗", label: "Viajes",
+    emojis: ["🚗","🚕","🚙","🚌","🚎","🏎","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🏍","🛵","🚲","🛴","🛺","🚨","🚥","🚦","🛑","🚧","⛽","🛞","⚓","🛟","⛵","🛶","🚤","🛳","⛴","🛥","🚢","✈️","🛩","🛫","🛬","🪂","💺","🚁","🚟","🚠","🚡","🛰","🚀","🛸","🪐","🌍","🌎","🌏","🗺","🧭","🏔","⛰","🌋","🗻","🏕","🏖","🏜","🏝","🏞","🏟","🏛","🏗","🧱","🏘","🏚","🏠","🏡","🏢","🏣","🏤","🏥","🏦","🏨","🏩","🏪","🏫","🏬","🏭","🏯","🏰","💒","🗼","🗽","⛪","🕌","🛕","🕍","⛩","🕋"]
+  },
+  {
+    icon: "💡", label: "Objetos",
+    emojis: ["⌚","📱","📲","💻","⌨️","🖥","🖨","🖱","🖲","🕹","🗜","💽","💾","💿","📀","📼","📷","📸","📹","🎥","📽","🎞","📞","☎️","📟","📠","📺","📻","🧭","⏱","⏲","⏰","🕰","⌛","⏳","📡","🔋","🔌","💡","🔦","🕯","🪔","🧯","🛢","💸","💵","💴","💶","💷","💰","💳","💎","⚖️","🧰","🔧","🔨","⚒","🛠","⛏","🔩","🪛","🔗","⛓","🧲","🪜","🧪","🧫","🧬","🔭","🔬","🩺","🩻","💊","💉","🩹","🩼","🩺","🌡","🛁","🛀","🪠","🚿","🛒","🧴","🧷","🧹","🧺","🧻","🪣","🧼","🫧","🪥","🪒","🧽","🧯","🛒"]
+  },
+  {
+    icon: "🎉", label: "Símbolos",
+    emojis: ["🎉","🎊","🎈","🎁","🎀","🎗","🎟","🎫","🎖","🏆","🥇","🎯","🎳","🎰","🎲","♟","🎭","🎨","🖼","🎪","🎤","🎧","🎼","🎵","🎶","🎷","🎸","🎹","🎺","🎻","🥁","🪘","🎬","🎙","📻","📺","📷","🔔","🔕","📢","📣","📯","🔔","🔖","🏷","💬","💭","🗯","💡","🔍","🔎","🔐","🔏","🔒","🔓","🔑","🗝","🔨","⚔️","🛡","🔧","⚙️","🗜","💈","⚗️","🔭","🧲","⚡","🔥","💧","❄️","✨","🌟","💫","⭐","🌈","☀️","🌤","⛅","🌥","☁️","🌦","🌧","⛈","🌩","🌨","❄️","☃️","⛄","🌬","💨","🌀","🌊","🌫","🌈"]
+  }
+];
+
+// Frecuencia de uso por emoji (clave localStorage)
+const RECENT_KEY = "atun_emoji_freq";
+const MAX_RECENTS = 24;
+
+function loadFreq(){
+  try{ return JSON.parse(localStorage.getItem(RECENT_KEY)||"{}"); }catch(e){ return {}; }
+}
+function saveFreq(f){ localStorage.setItem(RECENT_KEY, JSON.stringify(f)); }
+function trackEmoji(emoji){
+  const f = loadFreq();
+  f[emoji] = (f[emoji]||0)+1;
+  saveFreq(f);
+}
+function getRecents(){
+  const f = loadFreq();
+  return Object.entries(f)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,MAX_RECENTS)
+    .map(e=>e[0]);
+}
+
+// ==================== GIF PICKER ====================
+// Reemplaza con tu API key de GIPHY: https://developers.giphy.com/
+const GIPHY_KEY = "a1a1vZUOx6nKZkKkSGsCPAuyyn6KvA8q"; // key pública de demo de GIPHY
+const GIPHY_LIMIT = 16;
+
+let gifPickerOpen = false;
+let gifSearchTimer = null;
+
+const gifBtn    = document.getElementById("gifBtn");
+const gifPicker = document.getElementById("gifPicker");
+const gifSearch = document.getElementById("gifSearch");
+const gifGrid   = document.getElementById("gifGrid");
+const gifLoading= document.getElementById("gifLoading");
+
+async function fetchGifs(q){
+  gifGrid.innerHTML = "";
+  gifLoading.style.display = "block";
+  gifLoading.textContent = "Buscando...";
+  const endpoint = q
+    ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=${GIPHY_LIMIT}&rating=pg-13&lang=es`
+    : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=${GIPHY_LIMIT}&rating=pg-13`;
+  try {
+    const res = await fetch(endpoint);
+    const data = await res.json();
+    gifLoading.style.display = "none";
+    (data.data||[]).forEach(item=>{
+      // fixed_height_small para preview, original para enviar
+      const preview = item.images?.fixed_height_small?.url || item.images?.downsized?.url;
+      const full    = item.images?.fixed_height?.url || item.images?.original?.url;
+      if(!preview || !full) return;
+      const div = document.createElement("div");
+      div.className = "gif-item";
+      div.innerHTML = `<img src="${preview}" loading="lazy" alt="${item.title||'gif'}">`;
+      div.addEventListener("click", ()=> sendGif(full));
+      gifGrid.appendChild(div);
+    });
+    if(!gifGrid.children.length){
+      gifLoading.textContent = "Sin resultados";
+      gifLoading.style.display = "block";
+    }
+  } catch(e){
+    gifLoading.textContent = "Error al cargar GIFs";
+    gifLoading.style.display = "block";
+  }
+}
+
+function openGifPicker(){
+  gifPickerOpen = true;
+  gifPicker.classList.add("open");
+  gifBtn.classList.add("active");
+  // close emoji if open
+  if(pickerOpen) closePicker();
+  gifSearch.value = "";
+  fetchGifs("");
+  gifSearch.focus();
+}
+
+function closeGifPicker(){
+  gifPickerOpen = false;
+  gifPicker.classList.remove("open");
+  gifBtn.classList.remove("active");
+}
+
+gifBtn.addEventListener("click", e=>{
+  e.stopPropagation();
+  if(gifPickerOpen) closeGifPicker();
+  else openGifPicker();
+});
+
+gifSearch.addEventListener("input", ()=>{
+  clearTimeout(gifSearchTimer);
+  gifSearchTimer = setTimeout(()=> fetchGifs(gifSearch.value.trim()), 400);
+});
+
+// Cerrar al click afuera
+document.addEventListener("click", e=>{
+  if(gifPickerOpen && !gifPicker.contains(e.target) && e.target !== gifBtn){
+    closeGifPicker();
+  }
+});
+
+function sendGif(url){
+  if(!socket || !room || !nick) return;
+  const msg = {
+    id: Date.now() + "_gif_" + Math.random(),
+    room, nick,
+    text: "[GIF]" + url,   // formato especial que el render detecta
+    time: new Date().toISOString(),
+    replyTo: replyTo || null
+  };
+  socket.emit("message", msg);
+  closeGifPicker();
+  clearReply();
+  resetInactivity();
+}
+
+// ==================== EMOJI PICKER UI ====================
+let pickerOpen = false;
+let activeCategory = 0;
+let searchQuery = "";
+
+const emojiBtn    = document.getElementById("emojiBtn");
+const emojiPicker = document.getElementById("emojiPicker");
+const emojiSearch = document.getElementById("emojiSearch");
+const emojiTabs   = document.getElementById("emojiTabs");
+const emojiGrid   = document.getElementById("emojiGrid");
+const emojiRecentsSection = document.getElementById("emojiRecentsSection");
+const emojiRecentsGrid    = document.getElementById("emojiRecentsGrid");
+const recentsDivider      = document.getElementById("recentsDivider");
+
+function buildTabs(){
+  emojiTabs.innerHTML = "";
+  EMOJI_CATEGORIES.forEach((cat, i)=>{
+    const btn = document.createElement("button");
+    btn.className = "emoji-tab" + (i===activeCategory?" active":"");
+    btn.textContent = cat.icon;
+    btn.title = cat.label;
+    btn.addEventListener("click", ()=>{
+      activeCategory = i;
+      emojiSearch.value = "";
+      searchQuery = "";
+      renderGrid();
+      document.querySelectorAll(".emoji-tab").forEach((b,j)=>b.classList.toggle("active",j===i));
+    });
+    emojiTabs.appendChild(btn);
+  });
+}
+
+function renderGrid(){
+  emojiGrid.innerHTML = "";
+  const recents = getRecents();
+
+  // Recientes
+  if(recents.length > 0 && !searchQuery){
+    emojiRecentsSection.style.display = "block";
+    recentsDivider.style.display = "block";
+    emojiRecentsGrid.innerHTML = "";
+    recents.forEach(emoji=>{
+      emojiRecentsGrid.appendChild(makeEmojiBtn(emoji));
+    });
+  } else {
+    emojiRecentsSection.style.display = "none";
+    recentsDivider.style.display = "none";
+  }
+
+  // Grid principal
+  let list;
+  if(searchQuery){
+    const q = searchQuery.toLowerCase();
+    list = EMOJI_CATEGORIES.flatMap(c=>c.emojis).filter(e=>{
+      // Simple: buscar por nombre conocido no es viables con sólo el caracter,
+      // entonces filtramos por categoría si coincide el label
+      return true; // se hace abajo con búsqueda de categoría
+    });
+    // Búsqueda real: contra el nombre CLDR embebido
+    list = searchEmojis(q);
+  } else {
+    list = EMOJI_CATEGORIES[activeCategory].emojis;
+  }
+
+  list.forEach(emoji=>{
+    emojiGrid.appendChild(makeEmojiBtn(emoji));
+  });
+}
+
+function makeEmojiBtn(emoji){
+  const btn = document.createElement("button");
+  btn.className = "emoji-item";
+  btn.textContent = emoji;
+  btn.addEventListener("click", e=>{
+    e.stopPropagation();
+    insertEmoji(emoji);
+    trackEmoji(emoji);
+    renderGrid(); // actualiza recientes
+  });
+  return btn;
+}
+
+// Búsqueda simple: cruza emojis con palabras clave embebidas
+const EMOJI_KEYWORDS = {
+  "😀":"feliz contento alegre","😂":"risa carcajada llanto","😍":"amor enamorado ojos","😭":"llanto triste llorando",
+  "😊":"sonrisa feliz","😎":"fresco cool gafas","🤔":"pensando duda hmm","😅":"nervioso sudor alivio",
+  "😡":"enojo rabia molesto","😢":"triste llanto","😱":"susto miedo shock","🥰":"amor corazones encantado",
+  "🤣":"risa gracioso","😴":"dormir cansado sueño","🤮":"asco náuseas vomitar","😇":"ángel bueno inocente",
+  "🥺":"súplica ojos lindos porfa","🤦":"facepalm palmada","🤷":"no sé indiferente","👍":"bien ok aprobado",
+  "👎":"mal no aprobado","❤️":"corazón amor","🔥":"fuego caliente trending","💀":"muerto calavera",
+  "✨":"brillante estrella magia","🎉":"fiesta celebración","💯":"cien perfecto","🙏":"gracias por favor rezar",
+  "👀":"ojos mirando","💪":"fuerza músculo fuerte","🤝":"acuerdo saludo manos","😬":"incómodo tenso",
+  "🥳":"fiesta cumpleaños","🤡":"payaso","🫡":"saludo respeto"
+};
+
+function searchEmojis(q){
+  const results = [];
+  const seen = new Set();
+  // Busca en keywords primero
+  for(const [emoji, kw] of Object.entries(EMOJI_KEYWORDS)){
+    if(kw.includes(q) && !seen.has(emoji)){
+      results.push(emoji); seen.add(emoji);
+    }
+  }
+  // Luego todos los demás emojis de todas las categorías
+  EMOJI_CATEGORIES.forEach(cat=>{
+    if(cat.label.toLowerCase().includes(q)){
+      cat.emojis.forEach(e=>{ if(!seen.has(e)){ results.push(e); seen.add(e); } });
+    }
+  });
+  // Si poco resultado, devuelve todos (muestra todo)
+  if(results.length < 5){
+    EMOJI_CATEGORIES.flatMap(c=>c.emojis).forEach(e=>{
+      if(!seen.has(e)){ results.push(e); seen.add(e); }
+    });
+  }
+  return results;
+}
+
+function insertEmoji(emoji){
+  const input = document.getElementById("msg");
+  const start = input.selectionStart;
+  const end   = input.selectionEnd;
+  const val   = input.value;
+  input.value = val.slice(0,start) + emoji + val.slice(end);
+  const pos = start + emoji.length;
+  input.setSelectionRange(pos, pos);
+  input.focus();
+  // trigger input event para habilitar sendBtn
+  input.dispatchEvent(new Event("input"));
+}
+
+function openPicker(){
+  pickerOpen = true;
+  emojiPicker.classList.add("open");
+  emojiBtn.classList.add("active");
+  buildTabs();
+  renderGrid();
+  emojiSearch.focus();
+}
+
+function closePicker(){
+  pickerOpen = false;
+  emojiPicker.classList.remove("open");
+  emojiBtn.classList.remove("active");
+  emojiSearch.value = "";
+  searchQuery = "";
+}
+
+emojiBtn.addEventListener("click", e=>{
+  e.stopPropagation();
+  if(pickerOpen) closePicker();
+  else openPicker();
+});
+
+emojiSearch.addEventListener("input", ()=>{
+  searchQuery = emojiSearch.value.trim().toLowerCase();
+  renderGrid();
+});
+
+// Cerrar al click afuera
+document.addEventListener("click", e=>{
+  if(pickerOpen && !emojiPicker.contains(e.target) && e.target !== emojiBtn){
+    closePicker();
+  }
+});
+
+// Cerrar con Escape
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape" && pickerOpen) closePicker();
+});
+
+// ==================== ESTADO CHAT ====================
 let seenMessages = new Set();
 let socket;
 let room = "", nick = "";
 let coldTimer, inactivityTimer;
 let replyTo = null;
-
 const motivationMessages = [
   "El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.",
   "Los pulpos tienen tres corazones y su sangre es azul.",
@@ -218,8 +739,7 @@ const motivationMessages = [
   "El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.",
   "Los tiburones duermen con un ojo abierto y otro cerrado."
 ];
-
-// -------------------- ELEMENTOS --------------------
+// ---- ELEMENTOS ----
 const loginEl  = document.getElementById("login");
 const chatEl   = document.getElementById("chat");
 const overlay  = document.getElementById("overlay");
@@ -227,11 +747,9 @@ const msgInput = document.getElementById("msg");
 const sendBtn  = document.getElementById("sendBtn");
 const statusEl = document.getElementById("status");
 const toast    = document.getElementById("toast");
-
-// -------------------- UTIL --------------------
+// ---- UTIL ----
 function isMobile(){ return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
 function escapeHtml(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
 function linkify(text){
   const escaped = escapeHtml(text);
   return escaped.replace(
@@ -239,24 +757,20 @@ function linkify(text){
     '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;opacity:0.85;word-break:break-all;">$1</a>'
   );
 }
-
 async function hashRoom(password){
   const enc = new TextEncoder();
   const buf = await crypto.subtle.digest("SHA-256", enc.encode(password));
   return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
 }
-
 function showToast(msg){
   toast.textContent = msg;
   toast.classList.add("show");
   setTimeout(()=> toast.classList.remove("show"), 3000);
 }
-
-// -------------------- LOGIN --------------------
+// ---- LOGIN ----
 document.getElementById("loginBtn").addEventListener("click", join);
 document.getElementById("room").addEventListener("keydown", e => { if(e.key==="Enter") join(); });
 document.getElementById("nick").addEventListener("keydown", e => { if(e.key==="Enter") join(); });
-
 async function join(){
   nick = document.getElementById("nick").value.trim();
   const pass = document.getElementById("room").value.trim();
@@ -265,21 +779,16 @@ async function join(){
   errEl.textContent = "";
   loginStatus.textContent = "";
   loginStatus.classList.remove("visible");
-
   if(!nick){ errEl.textContent = "Ingresa un nick"; return; }
   if(!pass){ errEl.textContent = "Ingresa un código"; return; }
-
   const btn = document.getElementById("loginBtn");
   btn.disabled = true;
   loginStatus.textContent = "Despertando al atun...";
   loginStatus.classList.add("visible");
-
   const slowTimer = setTimeout(() => {
     loginStatus.textContent = "El atun se esta despertand, espera...";
   }, 3000);
-
   const tempSocket = io("https://cccahahhthh.onrender.com");
-
   tempSocket.on("connect", () => {
     clearTimeout(slowTimer);
     loginStatus.textContent = "Verificando código...";
@@ -294,7 +803,6 @@ async function join(){
       proceedToChat(pass);
     });
   });
-
   tempSocket.on("connect_error", () => {
     clearTimeout(slowTimer);
     tempSocket.disconnect();
@@ -303,7 +811,6 @@ async function join(){
     errEl.textContent = "Error de conexión";
   });
 }
-
 async function proceedToChat(pass){
   localStorage.setItem("nick", nick);
   room = await hashRoom(pass);
@@ -314,31 +821,25 @@ async function proceedToChat(pass){
   statusEl.className = "status-yellow";
   initSocket();
 }
-
-// -------------------- SOCKET --------------------
+// ---- SOCKET ----
 function initSocket(){
   socket = io("https://cccahahhthh.onrender.com");
-
   coldTimer = setTimeout(()=>{
     statusEl.innerText = "Conectando...";
     statusEl.className = "status-yellow";
   }, 2000);
-
   socket.emit("join-room", { room, nick });
-
   socket.on("connect", ()=>{
     clearTimeout(coldTimer);
     statusEl.innerText = "Conectado";
     statusEl.className = "status-green";
     sendBtn.disabled = !msgInput.value.trim();
   });
-
   socket.on("disconnect", ()=>{
     statusEl.innerText = "Desconectado";
     statusEl.className = "status-red";
     sendBtn.disabled = true;
   });
-
   socket.on("history", (messages)=>{
     document.getElementById("messages").innerHTML = "";
     messages.forEach(m => {
@@ -347,37 +848,38 @@ function initSocket(){
       addMessage(m);
     });
   });
-
   socket.on("message", (msg)=>{
     if(seenMessages.has(msg.id)) return;
     seenMessages.add(msg.id);
     addMessage(msg);
+    if(msg.nick !== nick) playNotif();
   });
-
   socket.on("user-joined", user => addSystemMessage(`${user} se ha unido`));
   socket.on("user-left",   user => addSystemMessage(`${user} se ha ido`));
-
   socket.on("chat-deleted", ()=>{
     document.getElementById("messages").innerHTML = "";
     showOverlay();
   });
-
   socket.on("rate-limited", data => {
     showToast(data.reason || "Demasiados mensajes");
   });
 }
-
-// -------------------- MENSAJES --------------------
+// ---- MENSAJES ----
+function renderContent(text){
+  if(text.startsWith("[GIF]")){
+    const url = text.slice(5);
+    return `<div class="msg-gif"><img src="${url}" alt="GIF" loading="lazy"></div>`;
+  }
+  return linkify(text);
+}
 function addMessage(msg){
   const el = document.createElement("div");
   const isMe = msg.nick === nick;
   el.className = "message " + (isMe ? "me" : "other");
   el.dataset.id = msg.id;
   el.dataset.nick = msg.nick;
-  el.dataset.text = msg.text;
-
+  el.dataset.text = msg.text.startsWith('[GIF]') ? '🖼 GIF' : msg.text;
   const t = new Date(msg.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-
   let replyHtml = "";
   if(msg.replyTo){
     replyHtml = `<div class="reply-bubble">
@@ -385,25 +887,25 @@ function addMessage(msg){
       <div class="reply-text">${escapeHtml(msg.replyTo.text)}</div>
     </div>`;
   }
-
   el.innerHTML = `
-    <div class="author">${escapeHtml(msg.nick)}</div>
-    ${replyHtml}
-    <div>${linkify(msg.text)}</div>
-    <div class="timestamp">${t}</div>
-    <button class="reply-btn" title="Citar">↩</button>
+    <div class="msg-row">
+      <div class="msg-bubble">
+        <div class="author">${escapeHtml(msg.nick)}</div>
+        ${replyHtml}
+        <div>${renderContent(msg.text)}</div>
+        <div class="timestamp">${t}</div>
+      </div>
+      <button class="reply-btn" title="Citar">↩</button>
+    </div>
   `;
-
   const btn = el.querySelector(".reply-btn");
   btn.addEventListener("click", e => {
     e.stopPropagation();
     setReply(el.dataset.id, el.dataset.nick, el.dataset.text);
   });
-
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({ behavior: "smooth" });
 }
-
 function addSystemMessage(text){
   const el = document.createElement("div");
   el.className = "message system";
@@ -411,67 +913,75 @@ function addSystemMessage(text){
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({ behavior: "smooth" });
 }
-
-// -------------------- CITA --------------------
+// ---- CITA ----
 function setReply(id, replyNick, text){
   replyTo = { id, nick: replyNick, text };
   document.getElementById("replyPreviewAuthor").textContent = replyNick + ": ";
-  document.getElementById("replyPreviewMsg").textContent = text.length > 80 ? text.slice(0,80)+"…" : text;
+  document.getElementById("replyPreviewMsg").textContent = text.length > 160 ? text.slice(0,160)+"…" : text;
   document.getElementById("replyPreview").classList.add("active");
   msgInput.focus();
 }
-
 function clearReply(){
   replyTo = null;
   document.getElementById("replyPreview").classList.remove("active");
 }
-
 document.getElementById("cancelReply").addEventListener("click", clearReply);
-
-// -------------------- ENVIAR --------------------
+// ---- ENVIAR ----
 msgInput.addEventListener("input", ()=>{ sendBtn.disabled = !msgInput.value.trim(); });
 msgInput.addEventListener("keydown", e => { if(e.key === "Enter") send(); });
 sendBtn.addEventListener("click", send);
-
 function send(){
   const text = msgInput.value.trim();
-  if(!text || text.length > 500) return;
-
+  if(!text || text.length > 450) return;
   const msg = {
     id: Date.now() + "_" + Math.random(),
     room, nick, text,
     time: new Date().toISOString(),
     replyTo: replyTo || null
   };
-
   socket.emit("message", msg);
   msgInput.value = "";
   sendBtn.disabled = true;
   clearReply();
-
+  closePicker();
+  closeGifPicker();
   if(isMobile()){
     msgInput.focus({ preventScroll: false });
     msgInput.scrollIntoView({ behavior: "smooth", block: "end" });
   }
   resetInactivity();
 }
-
-// -------------------- BORRAR --------------------
+// ---- BORRAR ----
 document.getElementById("deleteBtn").addEventListener("click", ()=>{
   const code = prompt("Código de borrado");
   if(!code) return;
   socket.emit("delete-chat", { room, code });
 });
-
-// -------------------- OVERLAY --------------------
-function showOverlay(){
-  if(isMobile()) return;
+// ---- PANICO ----
+document.getElementById("panicBtn").addEventListener("click", ()=>{
+  showOverlayForced();
+  if(socket && room && nick){
+    const msg = {
+      id: Date.now() + "_panic_" + Math.random(),
+      room, nick,
+      text: "🚨 activó el botón de pánico",
+      time: new Date().toISOString(),
+      replyTo: null
+    };
+    socket.emit("message", msg);
+  }
+});
+// ---- OVERLAY ----
+function showOverlayForced(){
   overlay.style.display = "flex";
   overlay.innerText = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
 }
+function showOverlay(){
+  if(isMobile()) return;
+  showOverlayForced();
+}
 function hideOverlay(){ overlay.style.display = "none"; }
-
-// -------------------- INACTIVIDAD --------------------
+// ---- INACTIVIDAD ----
 function resetInactivity(){
   clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(showOverlay, 50000);
@@ -479,7 +989,6 @@ function resetInactivity(){
 window.addEventListener("mousemove", resetInactivity);
 window.addEventListener("keydown",   resetInactivity);
 window.addEventListener("touchstart",resetInactivity);
-
 window.addEventListener("keydown", e => {
   if(e.ctrlKey && e.key.toLowerCase() === "q"){
     if(isMobile()) return;
@@ -487,8 +996,44 @@ window.addEventListener("keydown", e => {
     else hideOverlay();
   }
 });
+// ---- SONIDO ----
+let soundEnabled = true;
+const soundToggleBtn = document.getElementById("soundToggle");
+soundToggleBtn.addEventListener("click", ()=>{
+  soundEnabled = !soundEnabled;
+  soundToggleBtn.textContent = soundEnabled ? "🔔" : "🔕";
+  soundToggleBtn.classList.toggle("muted", !soundEnabled);
+  soundToggleBtn.title = soundEnabled ? "Sonido activado" : "Sonido desactivado";
+});
 
-// -------------------- INIT --------------------
+function playNotif(){
+  if(!soundEnabled) return;
+  if(overlay.style.display === "flex") return;
+  if(document.hasFocus()) return; // solo suena si la ventana no está en foco
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(660, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(520, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch(e){}
+}
+
+// ---- KEEPALIVE ----
+setInterval(()=>{
+  if(socket && socket.connected){
+    socket.emit("ping-check");
+  }
+}, 3 * 60 * 1000); // cada 3 minutos
+
+// ---- INIT ----
 window.addEventListener("load", ()=>{
   const savedNick = localStorage.getItem("nick");
   if(savedNick) document.getElementById("nick").value = savedNick;
