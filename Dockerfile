@@ -21,12 +21,11 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
 
 # Install node modules
-COPY package.json ./
-RUN npm install
+COPY package*.json ./
+RUN npm install --omit=dev
 
 # Copy application code
 COPY . .
-
 
 # Final stage for app image
 FROM base
@@ -35,5 +34,5 @@ FROM base
 COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
+EXPOSE 8080
 CMD [ "npm", "run", "start" ]
