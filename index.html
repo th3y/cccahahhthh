@@ -169,10 +169,9 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #lightboxClose{position:absolute;top:16px;right:20px;font-size:28px;color:white;cursor:pointer;background:none;border:none;line-height:1;opacity:0.7;}
 #lightboxClose:hover{opacity:1;}
 /* ---- MENSAJE AUTODESTRUCTIVO ---- */
-.msg-bubble.sd-locked{background:transparent!important;border:2px solid #ef4444;cursor:pointer;animation:sdPulse 1.5s ease-in-out infinite;min-height:52px;justify-content:center;align-items:center;user-select:none;}
-.msg-bubble.sd-locked .sd-hint{font-size:12px;color:#ef4444;display:flex;align-items:center;gap:6px;}
-.msg-bubble.sd-locked .author,.msg-bubble.sd-locked .timestamp,.msg-bubble.sd-locked .sd-content{display:none;}
-.msg-bubble.sd-unlocked{border:2px solid #ef4444;position:relative;}
+.msg-bubble.sd-locked{background:transparent!important;border:2px solid #ef4444!important;cursor:pointer;animation:sdPulse 1.5s ease-in-out infinite!important;min-height:52px;min-width:160px;display:flex!important;flex-direction:column;justify-content:center;align-items:center;user-select:none;padding:10px 16px;}
+.sd-hint{font-size:12px;color:#ef4444;display:flex;align-items:center;gap:6px;pointer-events:none;}
+.msg-bubble.sd-unlocked{border:2px solid #ef4444!important;position:relative;}
 .sd-timer{font-size:11px;color:#ef4444;font-weight:700;text-align:right;margin-top:4px;letter-spacing:0.05em;}
 @keyframes sdPulse{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#fca5a5;box-shadow:0 0 0 6px rgba(239,68,68,0.15);}}
 @keyframes sdExplode{0%{opacity:1;transform:scale(1);}60%{opacity:0.3;transform:scale(1.08);}100%{opacity:0;transform:scale(0.9);}}
@@ -891,23 +890,34 @@ function startSdCountdown(bubble,msgId,seconds){
 // FIX: recibe bubble como parámetro — ya no intenta buscarlo dentro de la función
 function renderSdMessage(el,msg,bubble){
   const isMe=msg.nick===nick;
+
+  // Vaciar el bubble completamente y construir desde cero
+  bubble.innerHTML="";
   bubble.classList.add("sd-locked");
-  // Ocultar contenido hasta que se revele
-  bubble.querySelector(".author").style.display="none";
-  bubble.querySelector(".sd-content").style.display="none";
-  bubble.querySelector(".timestamp").style.display="none";
+
   const hint=document.createElement("div");
   hint.className="sd-hint";
   hint.innerHTML=`🔥 <span>${isMe?"Toca para revelar":"Mensaje secreto — toca para revelar"}</span>`;
   bubble.appendChild(hint);
+
   bubble.addEventListener("click",()=>{
     if(!bubble.classList.contains("sd-locked"))return;
     bubble.classList.remove("sd-locked");
     bubble.classList.add("sd-unlocked");
     hint.remove();
-    bubble.querySelector(".author").style.display="";
-    bubble.querySelector(".sd-content").style.display="";
-    bubble.querySelector(".timestamp").style.display="";
+
+    // Reconstruir contenido real ahora que se reveló
+    const t=new Date(msg.time).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    let replyHtml="";
+    if(msg.replyTo){
+      replyHtml=`<div class="reply-bubble"><div class="reply-author">${escapeHtml(msg.replyTo.nick)}</div><div class="reply-text">${escapeHtml(msg.replyTo.text)}</div></div>`;
+    }
+    bubble.innerHTML=`
+      <div class="author">${escapeHtml(msg.nick)}</div>
+      ${replyHtml}
+      <div>${renderContent(msg.text)}</div>
+      <div class="timestamp">${t}</div>`;
+
     startSdCountdown(bubble,msg.id,msg.sdSeconds||7);
   },{once:true});
 }
