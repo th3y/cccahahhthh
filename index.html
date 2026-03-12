@@ -25,6 +25,16 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;}
 #header b{font-size:18px;}
 #roomHash{font-size:12px;opacity:0.6;}
+#onlineUsers{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:nowrap;}
+.online-chip{
+  font-size:11px;padding:2px 8px;border-radius:20px;
+  background:#1f2937;color:#d1d5db;
+  white-space:nowrap;max-width:90px;
+  overflow:hidden;text-overflow:ellipsis;
+  border:1px solid #374151;
+}
+.online-chip.me{border-color:#2563eb;color:#93c5fd;}
+.online-chip.more{color:#9ca3af;background:transparent;border-color:transparent;font-style:italic;padding-left:2px;}
 #status{font-size:13px;font-weight:bold;margin-top:2px;transition:color 0.3s ease;}
 .status-yellow{color:#facc15;}
 .status-green{color:#22c55e;}
@@ -200,6 +210,14 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #emojiBtn:hover{background:#374151;}
 #emojiBtn.active{background:#2563eb;}
 
+#loginHint{
+  font-size:12px;
+  color:#4b5563;
+  text-align:center;
+  margin-top:10px;
+  line-height:1.5;
+}
+
 /* ---- EMOJI PICKER ---- */
 #emojiPicker{
   position:absolute;
@@ -313,6 +331,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   <button id="loginBtn" type="button">Publicar dato</button>
   <div id="loginError"></div>
   <div id="loginStatus"></div>
+  <p id="loginHint">Si el atun esta dormido, contactanos en instagram!</p>
 </div>
 <!-- CHAT -->
 <div id="chat">
@@ -321,6 +340,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
       <b>Atun</b>
       <div id="roomHash"></div>
       <div id="status" class="status-yellow">Iniciando...</div>
+      <div id="onlineUsers"></div>
     </div>
     <div id="headerBtns">
       <button id="soundToggle" title="Sonido de notificación">🔔</button>
@@ -856,6 +876,7 @@ function initSocket(){
   });
   socket.on("user-joined", user => addSystemMessage(`${user} se ha unido`));
   socket.on("user-left",   user => addSystemMessage(`${user} se ha ido`));
+  socket.on("update-users", users => renderOnlineUsers(users));
   socket.on("chat-deleted", ()=>{
     document.getElementById("messages").innerHTML = "";
     showOverlay();
@@ -996,8 +1017,28 @@ window.addEventListener("keydown", e => {
     else hideOverlay();
   }
 });
+// ---- USUARIOS ONLINE ----
+function renderOnlineUsers(users){
+  const container = document.getElementById("onlineUsers");
+  container.innerHTML = "";
+  const visible = users.slice(0, 4);
+  const extra = users.length - 4;
+  visible.forEach(u => {
+    const chip = document.createElement("span");
+    chip.className = "online-chip" + (u === nick ? " me" : "");
+    chip.textContent = u;
+    chip.title = u;
+    container.appendChild(chip);
+  });
+  if(extra > 0){
+    const more = document.createElement("span");
+    more.className = "online-chip more";
+    more.textContent = "+" + extra + " más";
+    container.appendChild(more);
+  }
+}
 // ---- SONIDO ----
-let soundEnabled = false;
+let soundEnabled = true;
 const soundToggleBtn = document.getElementById("soundToggle");
 soundToggleBtn.addEventListener("click", ()=>{
   soundEnabled = !soundEnabled;
