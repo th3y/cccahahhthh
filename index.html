@@ -171,7 +171,14 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 /* ---- MENSAJE AUTODESTRUCTIVO ---- */
 .msg-bubble.sd-locked{background:transparent!important;border:2px solid #ef4444!important;cursor:pointer;animation:sdPulse 1.5s ease-in-out infinite!important;min-height:52px;min-width:160px;display:flex!important;flex-direction:column;justify-content:center;align-items:center;user-select:none;padding:10px 16px;}
 .sd-hint{font-size:12px;color:#ef4444;display:flex;align-items:center;gap:6px;pointer-events:none;}
+/* Emisor: borde rojo fijo, contenido visible, sin lock */
+.msg-bubble.sd-sent{border:2px solid #ef4444!important;position:relative;}
 .msg-bubble.sd-unlocked{border:2px solid #ef4444!important;position:relative;}
+.sd-timer{font-size:11px;color:#ef4444;font-weight:700;text-align:right;margin-top:4px;letter-spacing:0.05em;}
+/* Pulso normal */
+@keyframes sdPulse{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#fca5a5;box-shadow:0 0 0 6px rgba(239,68,68,0.18);}}
+/* Pulso urgente (últimos segundos) */
+@keyframes sdPulseFast{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#ffffff;box-shadow:0 0 0 8px rgba(239,68,68,0.35);}}
 .sd-timer{font-size:11px;color:#ef4444;font-weight:700;text-align:right;margin-top:4px;letter-spacing:0.05em;}
 @keyframes sdPulse{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#fca5a5;box-shadow:0 0 0 6px rgba(239,68,68,0.15);}}
 @keyframes sdExplode{0%{opacity:1;transform:scale(1);}60%{opacity:0.3;transform:scale(1.08);}100%{opacity:0;transform:scale(0.9);}}
@@ -873,9 +880,29 @@ function startSdCountdown(bubble,msgId,seconds){
   timerEl.className="sd-timer";timerEl.textContent="💣 "+seconds+"s";
   bubble.appendChild(timerEl);
   let remaining=seconds;
+
+  // Calcular duración de pulso según tiempo restante
+  function getPulseDuration(rem){
+    const ratio=rem/seconds; // 1.0 → 0.0
+    if(ratio>0.6) return 1.5;
+    if(ratio>0.4) return 1.1;
+    if(ratio>0.25) return 0.7;
+    if(ratio>0.1) return 0.4;
+    return 0.2;
+  }
+
+  function updatePulse(rem){
+    const dur=getPulseDuration(rem);
+    const anim=rem<=Math.ceil(seconds*0.25)?"sdPulseFast":"sdPulse";
+    bubble.style.animation=`${anim} ${dur}s ease-in-out infinite`;
+  }
+
+  updatePulse(remaining);
+
   const interval=setInterval(()=>{
     remaining--;
     timerEl.textContent="💣 "+remaining+"s";
+    updatePulse(remaining);
     if(remaining<=0){
       clearInterval(interval);
       bubble.classList.add("sd-dying");
@@ -887,26 +914,34 @@ function startSdCountdown(bubble,msgId,seconds){
     }
   },1000);
 }
-// FIX: recibe bubble como parámetro — ya no intenta buscarlo dentro de la función
 function renderSdMessage(el,msg,bubble){
   const isMe=msg.nick===nick;
 
-  // Vaciar el bubble completamente y construir desde cero
+  if(isMe){
+    // EMISOR: ve el mensaje normal con borde rojo, sin lock, sin countdown
+    bubble.classList.add("sd-sent");
+    // El contenido ya está en el bubble desde addMessage, no hay que tocar nada más
+    return;
+  }
+
+  // RECEPTOR: vaciar bubble y mostrar lock
   bubble.innerHTML="";
   bubble.classList.add("sd-locked");
 
   const hint=document.createElement("div");
   hint.className="sd-hint";
-  hint.innerHTML=`🔥 <span>${isMe?"Toca para revelar":"Mensaje secreto — toca para revelar"}</span>`;
+  hint.innerHTML=`🔥 <span>Mensaje bomba - toca para mostrar</span>`;
   bubble.appendChild(hint);
 
   bubble.addEventListener("click",()=>{
     if(!bubble.classList.contains("sd-locked"))return;
     bubble.classList.remove("sd-locked");
     bubble.classList.add("sd-unlocked");
+    // Limpiar animación previa antes de que startSdCountdown ponga la suya
+    bubble.style.animation="";
     hint.remove();
 
-    // Reconstruir contenido real ahora que se reveló
+    // Reconstruir contenido
     const t=new Date(msg.time).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
     let replyHtml="";
     if(msg.replyTo){
