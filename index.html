@@ -466,8 +466,7 @@ async function proceedToChat(pass){
 function initSocket(){
   socket=io(SERVER_URL);
   coldTimer=setTimeout(()=>{statusEl.innerText="Conectando...";statusEl.className="status-yellow";},2000);
-  socket.emit("join-room",{room,nick});
-  
+
   socket.on("connect",()=>{
     clearTimeout(coldTimer);
     statusEl.innerText="Conectado";
