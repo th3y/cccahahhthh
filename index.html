@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Atun - Datos curiosos</title>
+<title>Atún - Datos curiosos</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon.ico">
@@ -78,6 +78,26 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #replyPreviewAuthor{font-weight:bold;margin-right:4px;}
 #cancelReply{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
 #cancelReply:hover{color:white;}
+/* ---- TYPING ---- */
+#typingIndicator{flex-shrink:0;min-height:22px;padding:0 16px 6px;font-size:12px;color:#6b7280;font-style:italic;transition:opacity 0.3s;opacity:0;}
+#typingIndicator.visible{opacity:1;}
+@keyframes blink{0%,100%{opacity:0.3;}50%{opacity:1;}}
+#typingDots span{animation:blink 1.2s infinite;}
+#typingDots span:nth-child(2){animation-delay:0.2s;}
+#typingDots span:nth-child(3){animation-delay:0.4s;}
+/* ---- GIF SUGERIDO ---- */
+#gifSuggest{flex-shrink:0;display:none;flex-direction:column;border-top:1px solid #1f2937;background:#0f1623;padding:8px 10px;gap:6px;animation:pickerIn 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+#gifSuggest.open{display:flex;}
+#gifSuggestLabel{font-size:11px;color:#6b7280;display:flex;justify-content:space-between;align-items:center;}
+#gifSuggestLabel span{color:#22d3ee;font-weight:600;}
+#gifSuggestClose{background:none;border:none;color:#6b7280;cursor:pointer;font-size:16px;line-height:1;padding:0;}
+#gifSuggestClose:hover{color:white;}
+#gifSuggestGrid{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#374151 transparent;padding-bottom:4px;}
+#gifSuggestGrid::-webkit-scrollbar{height:3px;}
+#gifSuggestGrid::-webkit-scrollbar-thumb{background:#374151;border-radius:4px;}
+.gif-suggest-item{flex-shrink:0;width:100px;height:70px;border-radius:8px;overflow:hidden;cursor:pointer;background:#1f2937;transition:opacity 0.15s,transform 0.15s;}
+.gif-suggest-item:hover{opacity:0.85;transform:scale(1.04);}
+.gif-suggest-item img{width:100%;height:100%;object-fit:cover;display:block;}
 /* ---- INPUT AREA ---- */
 #inputArea{flex-shrink:0;display:flex;padding:10px;gap:8px;border-top:1px solid #1f2937;position:relative;}
 #msg{flex:1;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
@@ -148,6 +168,23 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #lightbox img{max-width:92vw;max-height:92vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.7);pointer-events:none;}
 #lightboxClose{position:absolute;top:16px;right:20px;font-size:28px;color:white;cursor:pointer;background:none;border:none;line-height:1;opacity:0.7;}
 #lightboxClose:hover{opacity:1;}
+/* ---- MENSAJE AUTODESTRUCTIVO ---- */
+.msg-bubble.sd-locked{background:transparent!important;border:2px solid #ef4444;cursor:pointer;animation:sdPulse 1.5s ease-in-out infinite;min-height:52px;justify-content:center;align-items:center;user-select:none;}
+.msg-bubble.sd-locked .sd-hint{font-size:12px;color:#ef4444;display:flex;align-items:center;gap:6px;}
+.msg-bubble.sd-locked .author,.msg-bubble.sd-locked .timestamp,.msg-bubble.sd-locked .sd-content{display:none;}
+.msg-bubble.sd-unlocked{border:2px solid #ef4444;position:relative;}
+.sd-timer{font-size:11px;color:#ef4444;font-weight:700;text-align:right;margin-top:4px;letter-spacing:0.05em;}
+@keyframes sdPulse{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#fca5a5;box-shadow:0 0 0 6px rgba(239,68,68,0.15);}}
+@keyframes sdExplode{0%{opacity:1;transform:scale(1);}60%{opacity:0.3;transform:scale(1.08);}100%{opacity:0;transform:scale(0.9);}}
+.msg-bubble.sd-dying{animation:sdExplode 0.4s forwards!important;}
+#sdBtn{flex-shrink:0;padding:0 10px;border:none;border-radius:8px;background:#1f2937;color:#ef4444;cursor:pointer;font-size:18px;line-height:1;transition:background 0.2s;height:44px;}
+#sdBtn:hover{background:#374151;}
+#sdBtn.active{background:#7f1d1d;color:#fca5a5;}
+#sdConfig{position:absolute;bottom:calc(100% + 8px);right:10px;background:#1a2235;border:1px solid #2d3748;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:14px 16px;z-index:200;display:none;flex-direction:column;gap:10px;animation:pickerIn 0.18s cubic-bezier(0.34,1.56,0.64,1) forwards;min-width:200px;}
+#sdConfig.open{display:flex;}
+#sdConfig label{font-size:12px;color:#9ca3af;}
+#sdConfig input[type=range]{width:100%;accent-color:#ef4444;}
+#sdConfigVal{font-size:13px;font-weight:700;color:#ef4444;text-align:center;}
 /* ---- TOAST ---- */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:100;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -155,68 +192,27 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0b0f19;color:white;justify-content:center;align-items:center;font-size:24px;text-align:center;padding:20px;z-index:999;animation:fadeIn 0.5s forwards;}
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
 @media (max-width:480px){#emojiPicker{width:calc(100vw - 20px);left:10px;}#emojiBody{max-height:160px;}}
-
-#gifSuggest{
-  flex-shrink:0;
-  display:none;
-  flex-direction:column;
-  border-top:1px solid #1f2937;
-  background:#0f1623;
-  padding:8px 10px;
-  gap:6px;
-  animation:pickerIn 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards;
-}
-#gifSuggest.open{display:flex;}
-#gifSuggestLabel{font-size:11px;color:#6b7280;display:flex;justify-content:space-between;align-items:center;}
-#gifSuggestLabel span{color:#22d3ee;font-weight:600;}
-#gifSuggestClose{background:none;border:none;color:#6b7280;cursor:pointer;font-size:16px;line-height:1;padding:0;}
-#gifSuggestClose:hover{color:white;}
-#gifSuggestGrid{
-  display:flex;gap:6px;
-  overflow-x:auto;overflow-y:hidden;
-  scrollbar-width:thin;scrollbar-color:#374151 transparent;
-  padding-bottom:4px;
-}
-#gifSuggestGrid::-webkit-scrollbar{height:3px;}
-#gifSuggestGrid::-webkit-scrollbar-thumb{background:#374151;border-radius:4px;}
-.gif-suggest-item{
-  flex-shrink:0;width:100px;height:70px;
-  border-radius:8px;overflow:hidden;cursor:pointer;
-  background:#1f2937;transition:opacity 0.15s,transform 0.15s;
-}
-.gif-suggest-item:hover{opacity:0.85;transform:scale(1.04);}
-.gif-suggest-item img{width:100%;height:100%;object-fit:cover;display:block;}
-
-#typingIndicator{
-  flex-shrink:0;min-height:22px;padding:0 16px 6px;
-  font-size:12px;color:#6b7280;font-style:italic;
-  transition:opacity 0.3s;opacity:0;
-}
-#typingIndicator.visible{opacity:1;}
-@keyframes blink{0%,100%{opacity:0.3;}50%{opacity:1;}}
-#typingDots span{animation:blink 1.2s infinite;}
-#typingDots span:nth-child(2){animation-delay:0.2s;}
-#typingDots span:nth-child(3){animation-delay:0.4s;}
-
 </style>
 </head>
 <body>
+
 <!-- LOGIN -->
 <div id="login">
-  <h2>Atun - Datos Curiosos</h2>
+  <h2>Atún - Datos Curiosos</h2>
   <input id="dummy" placeholder="Ingresa tu dato curioso">
   <input id="nick" placeholder="Nick">
   <input id="room" type="password" placeholder="Palabra">
   <button id="loginBtn" type="button">Publicar dato</button>
   <div id="loginError"></div>
   <div id="loginStatus"></div>
-  <p id="loginHint">Si el atun está despierto, pero el acuario vacio, contáctanos en Instagram!</p>
+  <p id="loginHint">Si el atún está despierto, pero el acuario vacío, contáctanos en Instagram!</p>
 </div>
+
 <!-- CHAT -->
 <div id="chat">
   <div id="header">
     <div>
-      <b>Atun</b>
+      <b>Atún</b>
       <div id="roomHash"></div>
       <div id="status" class="status-yellow">Iniciando...</div>
       <div id="onlineUsers"></div>
@@ -227,10 +223,13 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
       <button id="deleteBtn">Borrar</button>
     </div>
   </div>
+
   <div id="messages"></div>
+
   <div id="typingIndicator">
     <span id="typingName"></span> está escribiendo<span id="typingDots"><span>.</span><span>.</span><span>.</span></span>
   </div>
+
   <div id="replyPreview">
     <div id="replyPreviewText">
       <span id="replyPreviewAuthor"></span>
@@ -238,6 +237,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
     </div>
     <button id="cancelReply" title="Cancelar">✕</button>
   </div>
+
   <div id="gifSuggest">
     <div id="gifSuggestLabel">
       <span id="gifSuggestWord"></span>
@@ -245,8 +245,9 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
     </div>
     <div id="gifSuggestGrid"></div>
   </div>
+
   <div id="inputArea">
-    <!-- EMOJI PICKER PANEL -->
+    <!-- EMOJI PICKER -->
     <div id="emojiPicker">
       <input id="emojiSearch" placeholder="Buscar emoji..." autocomplete="off" spellcheck="false">
       <div id="emojiRecentsSection" style="display:none;">
@@ -255,9 +256,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
       </div>
       <div class="emoji-divider" id="recentsDivider" style="display:none;"></div>
       <div id="emojiTabs"></div>
-      <div id="emojiBody">
-        <div id="emojiGrid"></div>
-      </div>
+      <div id="emojiBody"><div id="emojiGrid"></div></div>
     </div>
     <!-- GIF PICKER -->
     <div id="gifPicker">
@@ -268,24 +267,34 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
       <div id="gifGrid"></div>
       <div id="gifLoading" style="display:none;">Buscando...</div>
     </div>
+    <!-- SD CONFIG -->
+    <div id="sdConfig">
+      <label>Segundos antes de destruirse</label>
+      <input type="range" id="sdRange" min="3" max="30" value="7" step="1">
+      <div id="sdConfigVal">7s</div>
+    </div>
+
     <button id="emojiBtn" title="Emojis">😊</button>
     <button id="gifBtn" title="GIF">GIF</button>
+    <button id="sdBtn" title="Mensaje autodestructivo">🔥</button>
     <input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send" maxlength="450">
     <button id="sendBtn" disabled>Enviar</button>
   </div>
 </div>
+
 <div id="toast"></div>
 <div id="overlay"></div>
+
 <!-- LIGHTBOX -->
 <div id="lightbox">
   <button id="lightboxClose">✕</button>
   <img id="lightboxImg" src="" alt="">
 </div>
 
-
 <script src="https://site--cccahahhthh--2s8tyxlxmg76.code.run/socket.io/socket.io.js"></script>
 <script>
 const SERVER_URL = "https://site--cccahahhthh--2s8tyxlxmg76.code.run";
+
 // ==================== EMOJI DATA ====================
 const EMOJI_CATEGORIES = [
   {icon:"😀",label:"Caras",emojis:["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","😟","🙁","☹️","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖"]},
@@ -299,38 +308,37 @@ const EMOJI_CATEGORIES = [
   {icon:"🎉",label:"Símbolos",emojis:["🎉","🎊","🎈","🎁","🎀","🎗","🎟","🎫","🎖","🏆","🥇","🎯","🎳","🎰","🎲","♟","🎭","🎨","🖼","🎪","🎤","🎧","🎼","🎵","🎶","🎷","🎸","🎹","🎺","🎻","🥁","🪘","🎬","🎙","📻","📺","📷","🔔","🔕","📢","📣","📯","🔔","🔖","🏷","💬","💭","🗯","💡","🔍","🔎","🔐","🔏","🔒","🔓","🔑","🗝","🔨","⚔️","🛡","🔧","⚙️","🗜","💈","⚗️","🔭","🧲","⚡","🔥","💧","❄️","✨","🌟","💫","⭐","🌈","☀️","🌤","⛅","🌥","☁️","🌦","🌧","⛈","🌩","🌨","❄️","☃️","⛄","🌬","💨","🌀","🌊","🌫","🌈"]}
 ];
 const RECENT_KEY = "atun_emoji_freq";
-const MAX_RECENTS = 24;
+const MAX_RECENTS = 10;
 function loadFreq(){try{return JSON.parse(localStorage.getItem(RECENT_KEY)||"{}");}catch(e){return {};}}
 function saveFreq(f){localStorage.setItem(RECENT_KEY,JSON.stringify(f));}
 function trackEmoji(emoji){const f=loadFreq();f[emoji]=(f[emoji]||0)+1;saveFreq(f);}
 function getRecents(){const f=loadFreq();return Object.entries(f).sort((a,b)=>b[1]-a[1]).slice(0,MAX_RECENTS).map(e=>e[0]);}
-const GIPHY_KEY="a1a1vZUOx6nKZkKkSGsCPAuyyn6KvA8q";
-const GIPHY_LIMIT=16;
-let gifPickerOpen=false;
-let gifSearchTimer=null;
-const gifBtn=document.getElementById("gifBtn");
-const gifPicker=document.getElementById("gifPicker");
-const gifSearch=document.getElementById("gifSearch");
-const gifGrid=document.getElementById("gifGrid");
-const gifLoading=document.getElementById("gifLoading");
+
+// ==================== GIPHY ====================
+const GIPHY_KEY = "a1a1vZUOx6nKZkKkSGsCPAuyyn6KvA8q";
+const GIPHY_LIMIT = 16;
+let gifPickerOpen = false;
+let gifSearchTimer = null;
+const gifBtn = document.getElementById("gifBtn");
+const gifPicker = document.getElementById("gifPicker");
+const gifSearch = document.getElementById("gifSearch");
+const gifGrid = document.getElementById("gifGrid");
+const gifLoading = document.getElementById("gifLoading");
+
 async function fetchGifs(q){
-  gifGrid.innerHTML="";
-  gifLoading.style.display="block";
-  gifLoading.textContent="Buscando...";
-  const randomOffset = Math.floor(Math.random() * 150);
-  const endpoint = q
-    ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=${GIPHY_LIMIT}&rating=pg-13&lang=es&offset=${randomOffset}`
-    : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=${GIPHY_LIMIT}&rating=pg-13&offset=${Math.floor(Math.random()*50)}`;
+  gifGrid.innerHTML="";gifLoading.style.display="block";gifLoading.textContent="Buscando...";
+  const randomOffset=Math.floor(Math.random()*150);
+  const endpoint=q
+    ?`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=${GIPHY_LIMIT}&rating=pg-13&lang=es&offset=${randomOffset}`
+    :`https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=${GIPHY_LIMIT}&rating=pg-13&offset=${Math.floor(Math.random()*50)}`;
   try{
-    const res=await fetch(endpoint);
-    const data=await res.json();
+    const res=await fetch(endpoint);const data=await res.json();
     gifLoading.style.display="none";
     (data.data||[]).forEach(item=>{
       const preview=item.images?.fixed_height_small?.url||item.images?.downsized?.url;
       const full=item.images?.fixed_height?.url||item.images?.original?.url;
-      if(!preview||!full) return;
-      const div=document.createElement("div");
-      div.className="gif-item";
+      if(!preview||!full)return;
+      const div=document.createElement("div");div.className="gif-item";
       div.innerHTML=`<img src="${preview}" loading="lazy" alt="${item.title||'gif'}">`;
       div.addEventListener("click",()=>sendGif(full));
       gifGrid.appendChild(div);
@@ -340,30 +348,71 @@ async function fetchGifs(q){
 }
 function openGifPicker(){
   gifPickerOpen=true;gifPicker.classList.add("open");gifBtn.classList.add("active");
-  if(pickerOpen) closePicker();
+  if(pickerOpen)closePicker();
   gifSearch.value="";fetchGifs("");gifSearch.focus();
 }
 function closeGifPicker(){gifPickerOpen=false;gifPicker.classList.remove("open");gifBtn.classList.remove("active");}
 gifBtn.addEventListener("click",e=>{e.stopPropagation();if(gifPickerOpen)closeGifPicker();else openGifPicker();});
 gifSearch.addEventListener("input",()=>{clearTimeout(gifSearchTimer);gifSearchTimer=setTimeout(()=>fetchGifs(gifSearch.value.trim()),400);});
 document.addEventListener("click",e=>{if(gifPickerOpen&&!gifPicker.contains(e.target)&&e.target!==gifBtn)closeGifPicker();});
+
+// FIX: sendGif también para typing
 function sendGif(url){
-  if(!socket||!room||!nick) return;
+  if(!socket||!room||!nick)return;
+  isTyping=false;
+  clearTimeout(typingTimer);
+  socket.emit("stop-typing",{room,nick});
   const msg={id:Date.now()+"_gif_"+Math.random(),room,nick,text:"[GIF]"+url,time:new Date().toISOString(),replyTo:replyTo||null};
   socket.emit("message",msg);closeGifPicker();clearReply();resetInactivity();
 }
-// ==================== EMOJI PICKER UI ====================
-let pickerOpen=false;
-let activeCategory=0;
-let searchQuery="";
-const emojiBtn=document.getElementById("emojiBtn");
-const emojiPicker=document.getElementById("emojiPicker");
-const emojiSearch=document.getElementById("emojiSearch");
-const emojiTabs=document.getElementById("emojiTabs");
-const emojiGrid=document.getElementById("emojiGrid");
-const emojiRecentsSection=document.getElementById("emojiRecentsSection");
-const emojiRecentsGrid=document.getElementById("emojiRecentsGrid");
-const recentsDivider=document.getElementById("recentsDivider");
+
+// ==================== GIF SUGERIDO ====================
+let gifSuggestTimer = null;
+const gifSuggest = document.getElementById("gifSuggest");
+const gifSuggestGrid = document.getElementById("gifSuggestGrid");
+const gifSuggestWord = document.getElementById("gifSuggestWord");
+
+function closeGifSuggest(){gifSuggest.classList.remove("open");gifSuggestGrid.innerHTML="";}
+document.getElementById("gifSuggestClose").addEventListener("click",closeGifSuggest);
+
+async function fetchGifSuggest(word){
+  gifSuggestGrid.innerHTML="";
+  gifSuggestWord.textContent=`GIFs: "${word}"`;
+  gifSuggest.classList.add("open");
+  const offset=Math.floor(Math.random()*100);
+  try{
+    const res=await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(word)}&limit=10&rating=pg-13&lang=es&offset=${offset}`);
+    const data=await res.json();
+    (data.data||[]).forEach(item=>{
+      const preview=item.images?.fixed_height_small?.url||item.images?.downsized?.url;
+      const full=item.images?.fixed_height?.url||item.images?.original?.url;
+      if(!preview||!full)return;
+      const div=document.createElement("div");div.className="gif-suggest-item";
+      div.innerHTML=`<img src="${preview}" loading="lazy" alt="gif">`;
+      div.addEventListener("click",()=>{
+        sendGif(full);
+        msgInput.value="";sendBtn.disabled=true;
+        closeGifSuggest();
+      });
+      gifSuggestGrid.appendChild(div);
+    });
+    if(!gifSuggestGrid.children.length)closeGifSuggest();
+  }catch(e){closeGifSuggest();}
+}
+
+// ==================== EMOJI PICKER ====================
+let pickerOpen = false;
+let activeCategory = 0;
+let searchQuery = "";
+const emojiBtn = document.getElementById("emojiBtn");
+const emojiPicker = document.getElementById("emojiPicker");
+const emojiSearch = document.getElementById("emojiSearch");
+const emojiTabs = document.getElementById("emojiTabs");
+const emojiGrid = document.getElementById("emojiGrid");
+const emojiRecentsSection = document.getElementById("emojiRecentsSection");
+const emojiRecentsGrid = document.getElementById("emojiRecentsGrid");
+const recentsDivider = document.getElementById("recentsDivider");
+
 function buildTabs(){
   emojiTabs.innerHTML="";
   EMOJI_CATEGORIES.forEach((cat,i)=>{
@@ -384,15 +433,12 @@ function renderGrid(){
     emojiRecentsSection.style.display="block";recentsDivider.style.display="block";
     emojiRecentsGrid.innerHTML="";
     recents.forEach(emoji=>emojiRecentsGrid.appendChild(makeEmojiBtn(emoji)));
-  } else {emojiRecentsSection.style.display="none";recentsDivider.style.display="none";}
-  let list;
-  if(searchQuery){list=searchEmojis(searchQuery.toLowerCase());}
-  else{list=EMOJI_CATEGORIES[activeCategory].emojis;}
+  }else{emojiRecentsSection.style.display="none";recentsDivider.style.display="none";}
+  const list=searchQuery?searchEmojis(searchQuery.toLowerCase()):EMOJI_CATEGORIES[activeCategory].emojis;
   list.forEach(emoji=>emojiGrid.appendChild(makeEmojiBtn(emoji)));
 }
 function makeEmojiBtn(emoji){
-  const btn=document.createElement("button");
-  btn.className="emoji-item";btn.textContent=emoji;
+  const btn=document.createElement("button");btn.className="emoji-item";btn.textContent=emoji;
   btn.addEventListener("click",e=>{e.stopPropagation();insertEmoji(emoji);trackEmoji(emoji);renderGrid();});
   return btn;
 }
@@ -417,20 +463,69 @@ emojiBtn.addEventListener("click",e=>{e.stopPropagation();if(pickerOpen)closePic
 emojiSearch.addEventListener("input",()=>{searchQuery=emojiSearch.value.trim().toLowerCase();renderGrid();});
 document.addEventListener("click",e=>{if(pickerOpen&&!emojiPicker.contains(e.target)&&e.target!==emojiBtn)closePicker();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&pickerOpen)closePicker();});
+
+// ==================== SD CONFIG ====================
+// FIX: declarado ANTES de send() para evitar problemas de hoisting con let
+let sdMode = false;
+let sdSeconds = 7;
+const sdBtn = document.getElementById("sdBtn");
+const sdConfig = document.getElementById("sdConfig");
+const sdRange = document.getElementById("sdRange");
+const sdConfigVal = document.getElementById("sdConfigVal");
+
+sdBtn.addEventListener("click",e=>{
+  e.stopPropagation();
+  sdMode=!sdMode;
+  sdBtn.classList.toggle("active",sdMode);
+  sdConfig.classList.toggle("open",sdMode);
+});
+sdRange.addEventListener("input",()=>{
+  sdSeconds=parseInt(sdRange.value);
+  sdConfigVal.textContent=sdSeconds+"s";
+});
+document.addEventListener("click",e=>{
+  if(sdConfig.classList.contains("open")&&!sdConfig.contains(e.target)&&e.target!==sdBtn){
+    sdConfig.classList.remove("open");
+  }
+});
+
+// ==================== TYPING ====================
+// FIX: declarado ANTES de send() por el mismo motivo
+let typingTimer = null;
+let isTyping = false;
+
+function emitTyping(val){
+  if(!socket||!room||!nick)return;
+  if(val.split(/\s+/).filter(Boolean).length<2)return;
+  if(!isTyping){isTyping=true;socket.emit("typing",{room,nick});}
+  clearTimeout(typingTimer);
+  typingTimer=setTimeout(()=>{isTyping=false;socket.emit("stop-typing",{room,nick});},1700);
+}
+function showTyping(typingNick){
+  document.getElementById("typingName").textContent=typingNick;
+  document.getElementById("typingIndicator").classList.add("visible");
+}
+function hideTyping(){
+  document.getElementById("typingIndicator").classList.remove("visible");
+}
+
 // ==================== ESTADO CHAT ====================
-let seenMessages=new Set();
+let seenMessages = new Set();
 let socket;
 let room="",nick="";
 let coldTimer,inactivityTimer;
-let replyTo=null;
+let replyTo = null;
+
 const motivationMessages=["El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.","Los pulpos tienen tres corazones y su sangre es azul.","El Sol representa más del 99% de la masa de nuestro sistema solar.","Los flamencos nacen grises y se vuelven rosados por su alimentación.","La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.","Un día en Venus dura más que un año en Venus.","Los tiburones existen desde antes que los árboles.","El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.","El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.","Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.","Las medusas existen desde hace más de 500 millones de años, antes que los dinosaurios.","El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones, fenómeno llamado efecto Mpemba.","Los gatos no pueden percibir sabores dulces.","Las abejas pueden reconocer rostros humanos.","Las vacas tienen mejores amigas y se estresan si se separan de ellas.","Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.","Los murciélagos siempre giran a la izquierda al salir de una cueva.","El diamante más grande jamás encontrado pesaba más de 3,100 quilates.","Los cocodrilos no pueden sacar la lengua.","Los escorpiones brillan bajo luz ultravioleta.","La luna se aleja de la Tierra aproximadamente 3.8 cm por año.","Los pulpos pueden usar herramientas y abrir frascos para obtener comida.","Los elefantes son los únicos animales que no pueden saltar.","Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: 7.","El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.","El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.","Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.","El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.","El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.","Los tiburones duermen con un ojo abierto y otro cerrado."];
-const loginEl=document.getElementById("login");
-const chatEl=document.getElementById("chat");
-const overlay=document.getElementById("overlay");
-const msgInput=document.getElementById("msg");
-const sendBtn=document.getElementById("sendBtn");
-const statusEl=document.getElementById("status");
-const toast=document.getElementById("toast");
+
+const loginEl = document.getElementById("login");
+const chatEl = document.getElementById("chat");
+const overlay = document.getElementById("overlay");
+const msgInput = document.getElementById("msg");
+const sendBtn = document.getElementById("sendBtn");
+const statusEl = document.getElementById("status");
+const toast = document.getElementById("toast");
+
 // ---- UTIL ----
 function isMobile(){return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);}
 function escapeHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -444,7 +539,40 @@ async function hashRoom(password){
   return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
 }
 function showToast(msg){toast.textContent=msg;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),3000);}
-// ---- YOUTUBE & IMAGE HELPERS ----
+
+// ---- CACHÉ LOCAL DE MENSAJES ----
+// Guarda hasta 50 mensajes por sala en localStorage.
+// Se borra cuando el server emite chat-deleted o el usuario borra manualmente.
+// Los mensajes SD nunca se cachean (son efímeros por diseño).
+const MSG_CACHE_PREFIX = "atun_msgs_";
+const MSG_CACHE_MAX = 50;
+
+function cacheKey(){return MSG_CACHE_PREFIX + room;}
+
+function loadMsgCache(){
+  try{return JSON.parse(localStorage.getItem(cacheKey())||"[]");}catch(e){return [];}
+}
+
+function saveMsgCache(messages){
+  try{localStorage.setItem(cacheKey(),JSON.stringify(messages.slice(-MSG_CACHE_MAX)));}catch(e){}
+}
+
+function pushMsgCache(msg){
+  // No cachear mensajes autodestructivos
+  if(msg.selfDestruct)return;
+  const cache=loadMsgCache();
+  // Evitar duplicados
+  if(cache.some(m=>m.id===msg.id))return;
+  cache.push(msg);
+  saveMsgCache(cache);
+}
+
+function clearMsgCache(){
+  localStorage.removeItem(cacheKey());
+  seenMessages.clear();
+}
+
+// ---- YOUTUBE & IMAGE ----
 function extractYouTubeId(text){
   const patterns=[
     /youtu\.be\/([a-zA-Z0-9_-]{11})/,
@@ -455,9 +583,7 @@ function extractYouTubeId(text){
   for(const p of patterns){const m=text.match(p);if(m)return m[1];}
   return null;
 }
-function isImageUrl(text){
-  return /^https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s]*)?$/i.test(text.trim());
-}
+function isImageUrl(text){return /^https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s]*)?$/i.test(text.trim());}
 function renderContent(text){
   if(text.startsWith("[GIF]")){
     const url=text.slice(5);
@@ -466,8 +592,8 @@ function renderContent(text){
   const ytId=extractYouTubeId(text);
   if(ytId){
     const textHtml=linkify(text);
-    const origin = encodeURIComponent(window.location.origin);
-	const embed=`<div class="msg-youtube"><iframe width="560" height="315" src="https://www.youtube.com/embed/${ytId}?rel=0&origin=${origin}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+    const origin=encodeURIComponent(window.location.origin);
+    const embed=`<div class="msg-youtube"><iframe src="https://www.youtube.com/embed/${ytId}?rel=0&origin=${origin}" title="YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
     return textHtml+embed;
   }
   if(isImageUrl(text)){
@@ -477,6 +603,7 @@ function renderContent(text){
   }
   return linkify(text);
 }
+
 // ---- LOGIN ----
 document.getElementById("loginBtn").addEventListener("click",join);
 document.getElementById("room").addEventListener("keydown",e=>{if(e.key==="Enter")join();});
@@ -491,8 +618,8 @@ async function join(){
   if(!pass){errEl.textContent="Ingresa un código";return;}
   const btn=document.getElementById("loginBtn");
   btn.disabled=true;
-  loginStatus.textContent="Despertando al atun...";loginStatus.classList.add("visible");
-  const slowTimer=setTimeout(()=>{loginStatus.textContent="El atun se esta despertando, espera...";},3000);
+  loginStatus.textContent="Despertando al atún...";loginStatus.classList.add("visible");
+  const slowTimer=setTimeout(()=>{loginStatus.textContent="El atún se está despertando, espera...";},3000);
   const tempSocket=io(SERVER_URL);
   tempSocket.on("connect",()=>{
     clearTimeout(slowTimer);loginStatus.textContent="Verificando código...";
@@ -510,52 +637,75 @@ async function join(){
 async function proceedToChat(pass){
   localStorage.setItem("nick",nick);
   room=await hashRoom(pass);
-  document.getElementById("roomHash").innerText="Sala: "+room.slice(0,16);
+  document.getElementById("roomHash").innerText="Acuario: "+room.slice(0,16);
   loginEl.style.display="none";chatEl.style.display="flex";
-  statusEl.innerText="Alimentando al atun...";statusEl.className="status-yellow";
+  statusEl.innerText="Alimentando al atún...";statusEl.className="status-yellow";
   initSocket();
-  setTimeout(()=>msgInput.focus(), 200);
+  setTimeout(()=>msgInput.focus(),200);
 }
+
 // ---- SOCKET ----
 function initSocket(){
   socket=io(SERVER_URL);
   coldTimer=setTimeout(()=>{statusEl.innerText="Conectando...";statusEl.className="status-yellow";},2000);
-
   socket.on("connect",()=>{
     clearTimeout(coldTimer);
-    statusEl.innerText="Conectado";
-    statusEl.className="status-green";
+    statusEl.innerText="Conectado";statusEl.className="status-green";
     sendBtn.disabled=!msgInput.value.trim();
     socket.emit("join-room",{room,nick});
   });
-  
   socket.on("disconnect",()=>{statusEl.innerText="Desconectado";statusEl.className="status-red";sendBtn.disabled=true;});
   socket.on("history",(messages)=>{
     document.getElementById("messages").innerHTML="";
-    messages.forEach(m=>{if(seenMessages.has(m.id))return;seenMessages.add(m.id);addMessage(m);});
+    seenMessages.clear();
+    // Si el server devuelve historial, usarlo y actualizar caché
+    if(messages.length>0){
+      saveMsgCache(messages);
+      messages.forEach(m=>{seenMessages.add(m.id);addMessage(m);});
+    }else{
+      // Server sin historial (reinicio, inactividad) — restaurar desde caché local
+      const cached=loadMsgCache();
+      if(cached.length>0){
+        cached.forEach(m=>{seenMessages.add(m.id);addMessage(m);});
+        addSystemMessage("⚡ Historial restaurado desde caché local");
+      }
+    }
     const msgsEl=document.getElementById("messages");
     msgsEl.scrollTop=msgsEl.scrollHeight;
   });
   socket.on("message",(msg)=>{
     if(seenMessages.has(msg.id))return;seenMessages.add(msg.id);addMessage(msg);
+    pushMsgCache(msg);
     if(msg.nick!==nick)playNotif();
   });
   socket.on("user-joined",user=>addSystemMessage(`${user} se ha unido`));
   socket.on("user-left",user=>addSystemMessage(`${user} se ha ido`));
   socket.on("update-users",users=>renderOnlineUsers(users));
-  socket.on("chat-deleted",()=>{document.getElementById("messages").innerHTML="";showOverlay();});
+  socket.on("chat-deleted",()=>{
+    clearMsgCache();
+    document.getElementById("messages").innerHTML="";
+    showOverlay();
+  });
   socket.on("rate-limited",data=>{showToast(data.reason||"Demasiados mensajes");});
-  socket.on("typing", (data)=> showTyping(data.nick));
-  socket.on("stop-typing", ()=> hideTyping());
+  socket.on("typing",(data)=>showTyping(data.nick));
+  socket.on("stop-typing",()=>hideTyping());
+  socket.on("sd-destroy",(data)=>{
+    const msgEl=document.querySelector(`.message[data-id="${data.msgId}"]`);
+    if(msgEl){
+      msgEl.querySelector(".msg-bubble")?.classList.add("sd-dying");
+      setTimeout(()=>msgEl.remove(),400);
+    }
+  });
 }
+
 // ---- MENSAJES ----
 function addMessage(msg){
   const el=document.createElement("div");
   const isMe=msg.nick===nick;
   el.className="message "+(isMe?"me":"other");
   el.dataset.id=msg.id;el.dataset.nick=msg.nick;
-  el.dataset.text=msg.text.startsWith('[GIF]')?'🖼 GIF':msg.text;
-  const t=new Date(msg.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  el.dataset.text=msg.text.startsWith("[GIF]")?"🖼 GIF":msg.text;
+  const t=new Date(msg.time).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
   let replyHtml="";
   if(msg.replyTo){
     replyHtml=`<div class="reply-bubble"><div class="reply-author">${escapeHtml(msg.replyTo.nick)}</div><div class="reply-text">${escapeHtml(msg.replyTo.text)}</div></div>`;
@@ -565,23 +715,30 @@ function addMessage(msg){
       <div class="msg-bubble">
         <div class="author">${escapeHtml(msg.nick)}</div>
         ${replyHtml}
-        <div>${renderContent(msg.text)}</div>
+        <div class="sd-content">${renderContent(msg.text)}</div>
         <div class="timestamp">${t}</div>
       </div>
       <button class="reply-btn" title="Citar">↩</button>
-    </div>
-  `;
-  const btn=el.querySelector(".reply-btn");
-  btn.addEventListener("click",e=>{e.stopPropagation();setReply(el.dataset.id,el.dataset.nick,el.dataset.text);});
+    </div>`;
+  el.querySelector(".reply-btn").addEventListener("click",e=>{
+    e.stopPropagation();setReply(el.dataset.id,el.dataset.nick,el.dataset.text);
+  });
+  // FIX: bubble se toma del DOM recién creado, no de variable inexistente
+  if(msg.selfDestruct){
+    const bubble=el.querySelector(".msg-bubble");
+    renderSdMessage(el,msg,bubble);
+  }
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({behavior:"smooth"});
 }
+
 function addSystemMessage(text){
   const el=document.createElement("div");
   el.className="message system";el.textContent=text;
   document.getElementById("messages").appendChild(el);
   el.scrollIntoView({behavior:"smooth"});
 }
+
 // ---- CITA ----
 function setReply(id,replyNick,text){
   replyTo={id,nick:replyNick,text};
@@ -592,22 +749,55 @@ function setReply(id,replyNick,text){
 }
 function clearReply(){replyTo=null;document.getElementById("replyPreview").classList.remove("active");}
 document.getElementById("cancelReply").addEventListener("click",clearReply);
-// ---- ENVIAR ----
-//msgInput.addEventListener("input",()=>{sendBtn.disabled=!msgInput.value.trim();});
+
+// ---- INPUT LISTENER UNIFICADO ----
+msgInput.addEventListener("input",()=>{
+  const val=msgInput.value.trim();
+  emitTyping(val);
+  sendBtn.disabled=!msgInput.value.trim();
+  clearTimeout(gifSuggestTimer);
+  if(val.length>2&&!/\s/.test(val)){
+    gifSuggestTimer=setTimeout(()=>fetchGifSuggest(val),500);
+  }else{
+    closeGifSuggest();
+  }
+});
 msgInput.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
 sendBtn.addEventListener("click",send);
+
+// ---- ENVIAR ----
 function send(){
   const text=msgInput.value.trim();
-  if(!text||text.length>450) return;
-  const msg={id:Date.now()+"_"+Math.random(),room,nick,text,time:new Date().toISOString(),replyTo:replyTo||null};
-  socket.emit("message",msg);msgInput.value="";sendBtn.disabled=true;clearReply();closePicker();closeGifPicker();
+  if(!text||text.length>450)return;
+  // Detener typing
+  isTyping=false;
+  clearTimeout(typingTimer);
+  socket.emit("stop-typing",{room,nick});
+  const msg={
+    id:Date.now()+"_"+Math.random(),
+    room,nick,text,
+    time:new Date().toISOString(),
+    replyTo:replyTo||null,
+    selfDestruct:sdMode||false,
+    sdSeconds:sdMode?sdSeconds:null
+  };
+  socket.emit("message",msg);
+  // Cachear mensaje propio inmediatamente (SD no se cachea — pushMsgCache lo ignora)
+  pushMsgCache(msg);
+  msgInput.value="";sendBtn.disabled=true;
+  clearReply();closePicker();closeGifPicker();closeGifSuggest();
+  if(sdMode){sdMode=false;sdBtn.classList.remove("active");sdConfig.classList.remove("open");}
   if(isMobile()){msgInput.focus({preventScroll:false});msgInput.scrollIntoView({behavior:"smooth",block:"end"});}
   resetInactivity();
 }
+
 // ---- BORRAR ----
 document.getElementById("deleteBtn").addEventListener("click",()=>{
-  const code=prompt("Código de borrado");if(!code)return;socket.emit("delete-chat",{room,code});
+  const code=prompt("Código de borrado");if(!code)return;
+  clearMsgCache();
+  socket.emit("delete-chat",{room,code});
 });
+
 // ---- PANICO ----
 document.getElementById("panicBtn").addEventListener("click",()=>{
   showOverlayForced();
@@ -616,10 +806,12 @@ document.getElementById("panicBtn").addEventListener("click",()=>{
     socket.emit("message",msg);
   }
 });
+
 // ---- OVERLAY ----
 function showOverlayForced(){overlay.style.display="flex";overlay.innerText=motivationMessages[Math.floor(Math.random()*motivationMessages.length)];}
 function showOverlay(){if(isMobile())return;showOverlayForced();}
 function hideOverlay(){overlay.style.display="none";}
+
 // ---- INACTIVIDAD ----
 function resetInactivity(){clearTimeout(inactivityTimer);inactivityTimer=setTimeout(showOverlay,50000);}
 window.addEventListener("mousemove",resetInactivity);
@@ -631,6 +823,7 @@ window.addEventListener("keydown",e=>{
     if(chatEl.style.display==="flex"&&overlay.style.display!=="flex")showOverlay();else hideOverlay();
   }
 });
+
 // ---- USUARIOS ONLINE ----
 function renderOnlineUsers(users){
   const container=document.getElementById("onlineUsers");container.innerHTML="";
@@ -642,9 +835,10 @@ function renderOnlineUsers(users){
   });
   if(extra>0){const more=document.createElement("span");more.className="online-chip more";more.textContent="+"+extra+" más";container.appendChild(more);}
 }
+
 // ---- SONIDO ----
-let soundEnabled=true;
-const soundToggleBtn=document.getElementById("soundToggle");
+let soundEnabled = true;
+const soundToggleBtn = document.getElementById("soundToggle");
 soundToggleBtn.addEventListener("click",()=>{
   soundEnabled=!soundEnabled;
   soundToggleBtn.textContent=soundEnabled?"🔔":"🔕";
@@ -664,16 +858,63 @@ function playNotif(){
     osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.3);
   }catch(e){}
 }
+
 // ---- LIGHTBOX ----
-const lightbox=document.getElementById("lightbox");
-const lightboxImg=document.getElementById("lightboxImg");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightboxImg");
 function openLightbox(src){lightboxImg.src=src;lightbox.classList.add("open");}
 function closeLightbox(){lightbox.classList.remove("open");lightboxImg.src="";}
 document.getElementById("lightboxClose").addEventListener("click",closeLightbox);
 lightbox.addEventListener("click",e=>{if(e.target===lightbox)closeLightbox();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&lightbox.classList.contains("open"))closeLightbox();});
+
+// ---- MENSAJES AUTODESTRUCTIVOS ----
+function startSdCountdown(bubble,msgId,seconds){
+  const timerEl=document.createElement("div");
+  timerEl.className="sd-timer";timerEl.textContent="💣 "+seconds+"s";
+  bubble.appendChild(timerEl);
+  let remaining=seconds;
+  const interval=setInterval(()=>{
+    remaining--;
+    timerEl.textContent="💣 "+remaining+"s";
+    if(remaining<=0){
+      clearInterval(interval);
+      bubble.classList.add("sd-dying");
+      setTimeout(()=>{
+        const msgEl=document.querySelector(`.message[data-id="${msgId}"]`);
+        if(msgEl)msgEl.remove();
+        socket.emit("sd-destroy",{room,msgId});
+      },400);
+    }
+  },1000);
+}
+// FIX: recibe bubble como parámetro — ya no intenta buscarlo dentro de la función
+function renderSdMessage(el,msg,bubble){
+  const isMe=msg.nick===nick;
+  bubble.classList.add("sd-locked");
+  // Ocultar contenido hasta que se revele
+  bubble.querySelector(".author").style.display="none";
+  bubble.querySelector(".sd-content").style.display="none";
+  bubble.querySelector(".timestamp").style.display="none";
+  const hint=document.createElement("div");
+  hint.className="sd-hint";
+  hint.innerHTML=`🔥 <span>${isMe?"Toca para revelar":"Mensaje secreto — toca para revelar"}</span>`;
+  bubble.appendChild(hint);
+  bubble.addEventListener("click",()=>{
+    if(!bubble.classList.contains("sd-locked"))return;
+    bubble.classList.remove("sd-locked");
+    bubble.classList.add("sd-unlocked");
+    hint.remove();
+    bubble.querySelector(".author").style.display="";
+    bubble.querySelector(".sd-content").style.display="";
+    bubble.querySelector(".timestamp").style.display="";
+    startSdCountdown(bubble,msg.id,msg.sdSeconds||7);
+  },{once:true});
+}
+
 // ---- KEEPALIVE ----
 setInterval(()=>{if(socket&&socket.connected)socket.emit("ping-check");},3*60*1000);
+
 // ---- INIT ----
 window.addEventListener("load",()=>{
   const savedNick=localStorage.getItem("nick");
@@ -687,97 +928,17 @@ function probeServer(){
   let attempt=0;let probeSocket=null;let retryTimer=null;let slowWarnTimer=null;
   function tryConnect(){
     if(probeSocket)probeSocket.disconnect();attempt++;
-    if(attempt===1){setStatus("Buscando al atun...");slowWarnTimer=setTimeout(()=>setStatus("Iré a despertar al atun, espera ~30s... ☕"),3500);}
+    if(attempt===1){setStatus("Buscando al atún...");slowWarnTimer=setTimeout(()=>setStatus("Iré a despertar al atún, espera ~30s... ☕"),3500);}
     probeSocket=io(SERVER_URL,{reconnection:false,timeout:8000});
     probeSocket.on("connect",()=>{
       clearTimeout(slowWarnTimer);clearTimeout(retryTimer);probeSocket.disconnect();
-      setStatus("✓ El atun está despierto!","ok");
+      setStatus("✓ El atún está despierto!","ok");
       setTimeout(()=>{statusEl.classList.remove("visible","ok");statusEl.textContent="";},90000);
     });
     probeSocket.on("connect_error",()=>{probeSocket.disconnect();retryTimer=setTimeout(tryConnect,5000);});
   }
   tryConnect();
 }
-
-// ---- GIF SUGERIDO POR PALABRA ----
-let gifSuggestTimer = null;
-const gifSuggest = document.getElementById("gifSuggest");
-const gifSuggestGrid = document.getElementById("gifSuggestGrid");
-const gifSuggestWord = document.getElementById("gifSuggestWord");
-
-function closeGifSuggest(){
-  gifSuggest.classList.remove("open");
-  gifSuggestGrid.innerHTML="";
-}
-
-document.getElementById("gifSuggestClose").addEventListener("click", closeGifSuggest);
-
-async function fetchGifSuggest(word){
-  gifSuggestGrid.innerHTML="";
-  gifSuggestWord.textContent= `GIFs: "${word}"`;
-  gifSuggest.classList.add("open");
-  const offset = Math.floor(Math.random() * 100);
-  try{
-    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(word)}&limit=10&rating=pg-13&lang=es&offset=${offset}`);
-    const data = await res.json();
-    (data.data||[]).forEach(item=>{
-      const preview = item.images?.fixed_height_small?.url || item.images?.downsized?.url;
-      const full = item.images?.fixed_height?.url || item.images?.original?.url;
-      if(!preview||!full) return;
-      const div = document.createElement("div");
-      div.className = "gif-suggest-item";
-      div.innerHTML = `<img src="${preview}" loading="lazy" alt="gif">`;
-      div.addEventListener("click", ()=>{
-        sendGif(full);
-        msgInput.value = "";
-        sendBtn.disabled = true;
-        closeGifSuggest();
-      });
-      gifSuggestGrid.appendChild(div);
-    });
-    if(!gifSuggestGrid.children.length) closeGifSuggest();
-  }catch(e){ closeGifSuggest(); }
-}
-// tiempo de una palabra antes de mostrar el grid - 500
-msgInput.addEventListener("input", ()=>{
-  emitTyping();
-  sendBtn.disabled = !msgInput.value.trim();
-  clearTimeout(gifSuggestTimer);
-  const val = msgInput.value.trim();
-  if(val.length > 2 && !/\s/.test(val)){
-    gifSuggestTimer = setTimeout(()=> fetchGifSuggest(val), 500);
-  } else {
-    closeGifSuggest();
-  }
-});
-
-// ---- TYPING ----
-let typingTimer = null;
-let isTyping = false;
-
-function emitTyping(){
-  if(!socket||!room||!nick) return;
-  if(!isTyping){
-    isTyping = true;
-    socket.emit("typing", { room, nick });
-  }
-  clearTimeout(typingTimer);
-  typingTimer = setTimeout(()=>{
-    isTyping = false;
-    socket.emit("stop-typing", { room, nick });
-  }, 1500);
-}
-
-function showTyping(typingNick){
-  const el = document.getElementById("typingIndicator");
-  document.getElementById("typingName").textContent = typingNick;
-  el.classList.add("visible");
-}
-
-function hideTyping(){
-  document.getElementById("typingIndicator").classList.remove("visible");
-}
-
 </script>
 </body>
 </html>

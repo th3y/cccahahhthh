@@ -61,7 +61,7 @@ setInterval(() => {
   saveRooms(rooms);
 }, 15000);
 
-// Limpieza automática cada 24h — borra historial y notifica a todos los conectados
+// Limpieza automática cada 24h
 setInterval(() => {
   for (const roomId of Object.keys(rooms)) {
     rooms[roomId].history = [];
@@ -74,7 +74,7 @@ setInterval(() => {
 // -------------------- SOCKET.IO --------------------
 io.on("connection", (socket) => {
 
-  // ---------- VALIDAR CÓDIGO DE ACCESO ----------
+  // ---------- VALIDAR CÓDIGO ----------
   socket.on("validate-code", (data, callback) => {
     const { code } = data;
     if (VALID_CODES.length === 0) {
@@ -115,6 +115,21 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Mensajes autodestructivos: no se guardan en historial
+    if (data.selfDestruct) {
+      const msg = {
+        id: data.id,
+        nick: data.nick,
+        text: data.text,
+        time: data.time,
+        replyTo: data.replyTo || null,
+        selfDestruct: true,
+        sdSeconds: data.sdSeconds || 7
+      };
+      io.to(room).emit("message", msg);
+      return;
+    }
+
     const msg = {
       id: data.id,
       nick: data.nick,
@@ -125,8 +140,13 @@ io.on("connection", (socket) => {
 
     rooms[room].history.push(msg);
     if (rooms[room].history.length > 50) rooms[room].history.shift();
-
     io.to(room).emit("message", msg);
+  });
+
+  // ---------- SD DESTROY ----------
+  // Solo reemite a los otros — quien destruye ya lo maneja localmente con el countdown
+  socket.on("sd-destroy", (data) => {
+    socket.to(data.room).emit("sd-destroy", { msgId: data.msgId });
   });
 
   // ---------- BORRAR CHAT ----------
@@ -142,6 +162,15 @@ io.on("connection", (socket) => {
     socket.emit("pong-check", { nick: socket.nick, room: socket.room });
   });
 
+  // ---------- TYPING ----------
+  socket.on("typing", (data) => {
+    socket.to(data.room).emit("typing", { nick: data.nick });
+  });
+
+  socket.on("stop-typing", (data) => {
+    socket.to(data.room).emit("stop-typing", { nick: data.nick });
+  });
+
   // ---------- DISCONNECT ----------
   socket.on("disconnect", () => {
     const { room, nick } = socket;
@@ -151,15 +180,7 @@ io.on("connection", (socket) => {
     socket.to(room).emit("user-left", nick);
     io.to(room).emit("update-users", Object.values(rooms[room].users));
   });
-  
-  socket.on("typing", (data) => {
-    socket.to(data.room).emit("typing", { nick: data.nick });
-  });
-  
-  socket.on("stop-typing", (data) => {
-    socket.to(data.room).emit("stop-typing", { nick: data.nick });
-  });
-  
+
 });
 
 server.listen(process.env.PORT || 8080, () => {
