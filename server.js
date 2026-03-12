@@ -151,6 +151,15 @@ io.on("connection", (socket) => {
     socket.to(room).emit("user-left", nick);
     io.to(room).emit("update-users", Object.values(rooms[room].users));
   });
+  
+  socket.on("typing", (data) => {
+    socket.to(data.room).emit("typing", { nick: data.nick });
+  });
+  
+  socket.on("stop-typing", (data) => {
+    socket.to(data.room).emit("stop-typing", { nick: data.nick });
+  });
+  
 });
 
 server.listen(process.env.PORT || 8080, () => {

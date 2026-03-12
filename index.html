@@ -155,6 +155,49 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0b0f19;color:white;justify-content:center;align-items:center;font-size:24px;text-align:center;padding:20px;z-index:999;animation:fadeIn 0.5s forwards;}
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
 @media (max-width:480px){#emojiPicker{width:calc(100vw - 20px);left:10px;}#emojiBody{max-height:160px;}}
+
+#gifSuggest{
+  flex-shrink:0;
+  display:none;
+  flex-direction:column;
+  border-top:1px solid #1f2937;
+  background:#0f1623;
+  padding:8px 10px;
+  gap:6px;
+  animation:pickerIn 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+#gifSuggest.open{display:flex;}
+#gifSuggestLabel{font-size:11px;color:#6b7280;display:flex;justify-content:space-between;align-items:center;}
+#gifSuggestLabel span{color:#22d3ee;font-weight:600;}
+#gifSuggestClose{background:none;border:none;color:#6b7280;cursor:pointer;font-size:16px;line-height:1;padding:0;}
+#gifSuggestClose:hover{color:white;}
+#gifSuggestGrid{
+  display:flex;gap:6px;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:thin;scrollbar-color:#374151 transparent;
+  padding-bottom:4px;
+}
+#gifSuggestGrid::-webkit-scrollbar{height:3px;}
+#gifSuggestGrid::-webkit-scrollbar-thumb{background:#374151;border-radius:4px;}
+.gif-suggest-item{
+  flex-shrink:0;width:100px;height:70px;
+  border-radius:8px;overflow:hidden;cursor:pointer;
+  background:#1f2937;transition:opacity 0.15s,transform 0.15s;
+}
+.gif-suggest-item:hover{opacity:0.85;transform:scale(1.04);}
+.gif-suggest-item img{width:100%;height:100%;object-fit:cover;display:block;}
+
+#typingIndicator{
+  flex-shrink:0;min-height:22px;padding:0 16px 6px;
+  font-size:12px;color:#6b7280;font-style:italic;
+  transition:opacity 0.3s;opacity:0;
+}
+#typingIndicator.visible{opacity:1;}
+@keyframes blink{0%,100%{opacity:0.3;}50%{opacity:1;}}
+#typingDots span{animation:blink 1.2s infinite;}
+#typingDots span:nth-child(2){animation-delay:0.2s;}
+#typingDots span:nth-child(3){animation-delay:0.4s;}
+
 </style>
 </head>
 <body>
@@ -185,12 +228,22 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
     </div>
   </div>
   <div id="messages"></div>
+  <div id="typingIndicator">
+    <span id="typingName"></span> está escribiendo<span id="typingDots"><span>.</span><span>.</span><span>.</span></span>
+  </div>
   <div id="replyPreview">
     <div id="replyPreviewText">
       <span id="replyPreviewAuthor"></span>
       <span id="replyPreviewMsg"></span>
     </div>
     <button id="cancelReply" title="Cancelar">✕</button>
+  </div>
+  <div id="gifSuggest">
+    <div id="gifSuggestLabel">
+      <span id="gifSuggestWord"></span>
+      <button id="gifSuggestClose" title="Cerrar">✕</button>
+    </div>
+    <div id="gifSuggestGrid"></div>
   </div>
   <div id="inputArea">
     <!-- EMOJI PICKER PANEL -->
@@ -461,6 +514,7 @@ async function proceedToChat(pass){
   loginEl.style.display="none";chatEl.style.display="flex";
   statusEl.innerText="Alimentando al atun...";statusEl.className="status-yellow";
   initSocket();
+  setTimeout(()=>msgInput.focus(), 200);
 }
 // ---- SOCKET ----
 function initSocket(){
@@ -491,6 +545,8 @@ function initSocket(){
   socket.on("update-users",users=>renderOnlineUsers(users));
   socket.on("chat-deleted",()=>{document.getElementById("messages").innerHTML="";showOverlay();});
   socket.on("rate-limited",data=>{showToast(data.reason||"Demasiados mensajes");});
+  socket.on("typing", (data)=> showTyping(data.nick));
+  socket.on("stop-typing", ()=> hideTyping());
 }
 // ---- MENSAJES ----
 function addMessage(msg){
@@ -537,7 +593,7 @@ function setReply(id,replyNick,text){
 function clearReply(){replyTo=null;document.getElementById("replyPreview").classList.remove("active");}
 document.getElementById("cancelReply").addEventListener("click",clearReply);
 // ---- ENVIAR ----
-msgInput.addEventListener("input",()=>{sendBtn.disabled=!msgInput.value.trim();});
+//msgInput.addEventListener("input",()=>{sendBtn.disabled=!msgInput.value.trim();});
 msgInput.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
 sendBtn.addEventListener("click",send);
 function send(){
@@ -603,7 +659,7 @@ function playNotif(){
     osc.connect(gain);gain.connect(ctx.destination);osc.type="sine";
     osc.frequency.setValueAtTime(660,ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(520,ctx.currentTime+0.15);
-    gain.gain.setValueAtTime(0.05,ctx.currentTime);
+    gain.gain.setValueAtTime(0.04,ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
     osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.3);
   }catch(e){}
@@ -642,6 +698,86 @@ function probeServer(){
   }
   tryConnect();
 }
+
+// ---- GIF SUGERIDO POR PALABRA ----
+let gifSuggestTimer = null;
+const gifSuggest = document.getElementById("gifSuggest");
+const gifSuggestGrid = document.getElementById("gifSuggestGrid");
+const gifSuggestWord = document.getElementById("gifSuggestWord");
+
+function closeGifSuggest(){
+  gifSuggest.classList.remove("open");
+  gifSuggestGrid.innerHTML="";
+}
+
+document.getElementById("gifSuggestClose").addEventListener("click", closeGifSuggest);
+
+async function fetchGifSuggest(word){
+  gifSuggestGrid.innerHTML="";
+  gifSuggestWord.textContent= `GIFs: "${word}"`;
+  gifSuggest.classList.add("open");
+  const offset = Math.floor(Math.random() * 100);
+  try{
+    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(word)}&limit=10&rating=pg-13&lang=es&offset=${offset}`);
+    const data = await res.json();
+    (data.data||[]).forEach(item=>{
+      const preview = item.images?.fixed_height_small?.url || item.images?.downsized?.url;
+      const full = item.images?.fixed_height?.url || item.images?.original?.url;
+      if(!preview||!full) return;
+      const div = document.createElement("div");
+      div.className = "gif-suggest-item";
+      div.innerHTML = `<img src="${preview}" loading="lazy" alt="gif">`;
+      div.addEventListener("click", ()=>{
+        sendGif(full);
+        msgInput.value = "";
+        sendBtn.disabled = true;
+        closeGifSuggest();
+      });
+      gifSuggestGrid.appendChild(div);
+    });
+    if(!gifSuggestGrid.children.length) closeGifSuggest();
+  }catch(e){ closeGifSuggest(); }
+}
+// tiempo de una palabra antes de mostrar el grid - 500
+msgInput.addEventListener("input", ()=>{
+  emitTyping();
+  sendBtn.disabled = !msgInput.value.trim();
+  clearTimeout(gifSuggestTimer);
+  const val = msgInput.value.trim();
+  if(val.length > 2 && !/\s/.test(val)){
+    gifSuggestTimer = setTimeout(()=> fetchGifSuggest(val), 500);
+  } else {
+    closeGifSuggest();
+  }
+});
+
+// ---- TYPING ----
+let typingTimer = null;
+let isTyping = false;
+
+function emitTyping(){
+  if(!socket||!room||!nick) return;
+  if(!isTyping){
+    isTyping = true;
+    socket.emit("typing", { room, nick });
+  }
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(()=>{
+    isTyping = false;
+    socket.emit("stop-typing", { room, nick });
+  }, 1500);
+}
+
+function showTyping(typingNick){
+  const el = document.getElementById("typingIndicator");
+  document.getElementById("typingName").textContent = typingNick;
+  el.classList.add("visible");
+}
+
+function hideTyping(){
+  document.getElementById("typingIndicator").classList.remove("visible");
+}
+
 </script>
 </body>
 </html>
