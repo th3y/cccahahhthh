@@ -99,10 +99,12 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .gif-suggest-item:hover{opacity:0.85;transform:scale(1.04);}
 .gif-suggest-item img{width:100%;height:100%;object-fit:cover;display:block;}
 /* ---- INPUT AREA ---- */
-#inputArea{flex-shrink:0;display:flex;padding:10px;gap:8px;border-top:1px solid #1f2937;position:relative;}
-#msg{flex:1;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
+#inputArea{flex-shrink:0;display:flex;flex-direction:column;padding:10px;gap:6px;border-top:1px solid #1f2937;position:relative;}
+#inputRow{display:flex;gap:8px;align-items:center;}
+#accessoryRow{display:flex;gap:6px;align-items:center;}
+#msg{flex:1;min-width:0;padding:12px;border-radius:8px;border:none;background:#1f2937;color:white;transition:0.2s;}
 #msg:focus{outline:none;box-shadow:0 0 8px #2563eb;}
-#sendBtn{padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;}
+#sendBtn{flex-shrink:0;padding:12px 16px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;}
 #sendBtn:disabled{background:#374151;cursor:not-allowed;}
 #sendBtn:hover:not(:disabled){background:#1e40af;}
 /* ---- GIF BUTTON ---- */
@@ -129,7 +131,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .msg-gif{border-radius:8px;overflow:hidden;max-width:220px;margin-top:4px;cursor:pointer;}
 .msg-gif img{width:100%;display:block;border-radius:8px;}
 /* ---- EMOJI BUTTON ---- */
-#emojiBtn{flex-shrink:0;padding:0 12px;border:none;border-radius:8px;background:#1f2937;color:white;cursor:pointer;font-size:20px;line-height:1;transition:background 0.2s;display:flex;align-items:center;justify-content:center;}
+#emojiBtn{flex-shrink:0;padding:0 12px;height:44px;border:none;border-radius:8px;background:#1f2937;color:white;cursor:pointer;font-size:20px;line-height:1;transition:background 0.2s;display:flex;align-items:center;justify-content:center;}
 #emojiBtn:hover{background:#374151;}
 #emojiBtn.active{background:#2563eb;}
 /* ---- EMOJI PICKER ---- */
@@ -171,16 +173,11 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 /* ---- MENSAJE AUTODESTRUCTIVO ---- */
 .msg-bubble.sd-locked{background:transparent!important;border:2px solid #ef4444!important;cursor:pointer;animation:sdPulse 1.5s ease-in-out infinite!important;min-height:52px;min-width:160px;display:flex!important;flex-direction:column;justify-content:center;align-items:center;user-select:none;padding:10px 16px;}
 .sd-hint{font-size:12px;color:#ef4444;display:flex;align-items:center;gap:6px;pointer-events:none;}
-/* Emisor: borde rojo fijo, contenido visible, sin lock */
 .msg-bubble.sd-sent{border:2px solid #ef4444!important;position:relative;}
 .msg-bubble.sd-unlocked{border:2px solid #ef4444!important;position:relative;}
 .sd-timer{font-size:11px;color:#ef4444;font-weight:700;text-align:right;margin-top:4px;letter-spacing:0.05em;}
-/* Pulso normal */
 @keyframes sdPulse{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#fca5a5;box-shadow:0 0 0 6px rgba(239,68,68,0.18);}}
-/* Pulso urgente (últimos segundos) */
 @keyframes sdPulseFast{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#ffffff;box-shadow:0 0 0 8px rgba(239,68,68,0.35);}}
-.sd-timer{font-size:11px;color:#ef4444;font-weight:700;text-align:right;margin-top:4px;letter-spacing:0.05em;}
-@keyframes sdPulse{0%,100%{border-color:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0);}50%{border-color:#fca5a5;box-shadow:0 0 0 6px rgba(239,68,68,0.15);}}
 @keyframes sdExplode{0%{opacity:1;transform:scale(1);}60%{opacity:0.3;transform:scale(1.08);}100%{opacity:0;transform:scale(0.9);}}
 .msg-bubble.sd-dying{animation:sdExplode 0.4s forwards!important;}
 #sdBtn{flex-shrink:0;padding:0 10px;border:none;border-radius:8px;background:#1f2937;color:#ef4444;cursor:pointer;font-size:18px;line-height:1;transition:background 0.2s;height:44px;}
@@ -191,6 +188,13 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #sdConfig label{font-size:12px;color:#9ca3af;}
 #sdConfig input[type=range]{width:100%;accent-color:#ef4444;}
 #sdConfigVal{font-size:13px;font-weight:700;color:#ef4444;text-align:center;}
+/* ---- MOBILE: dos filas en inputArea ---- */
+@media (max-width:480px){
+  #emojiBtn,#gifBtn,#sdBtn{height:36px;}
+  #gifBtn{height:36px;}
+  #sdBtn{margin-left:auto;}
+  #accessoryRow{padding:0 2px;}
+}
 /* ---- TOAST ---- */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:100;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -280,11 +284,18 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
       <div id="sdConfigVal">7s</div>
     </div>
 
-    <button id="emojiBtn" title="Emojis">😊</button>
-    <button id="gifBtn" title="GIF">GIF</button>
-    <button id="sdBtn" title="Mensaje autodestructivo">🔥</button>
-    <input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send" maxlength="450">
-    <button id="sendBtn" disabled>Enviar</button>
+    <!-- FILA 1: input + enviar -->
+    <div id="inputRow">
+      <input id="msg" placeholder="Escribe tu mensaje" enterkeyhint="send" maxlength="450">
+      <button id="sendBtn" disabled>Enviar</button>
+    </div>
+
+    <!-- FILA 2: botones accesorios -->
+    <div id="accessoryRow">
+      <button id="emojiBtn" title="Emojis">😊</button>
+      <button id="gifBtn" title="GIF">GIF</button>
+      <button id="sdBtn" title="Mensaje autodestructivo">🔥</button>
+    </div>
   </div>
 </div>
 
@@ -362,7 +373,6 @@ gifBtn.addEventListener("click",e=>{e.stopPropagation();if(gifPickerOpen)closeGi
 gifSearch.addEventListener("input",()=>{clearTimeout(gifSearchTimer);gifSearchTimer=setTimeout(()=>fetchGifs(gifSearch.value.trim()),400);});
 document.addEventListener("click",e=>{if(gifPickerOpen&&!gifPicker.contains(e.target)&&e.target!==gifBtn)closeGifPicker();});
 
-// FIX: sendGif también para typing
 function sendGif(url){
   if(!socket||!room||!nick)return;
   isTyping=false;
@@ -471,7 +481,6 @@ document.addEventListener("click",e=>{if(pickerOpen&&!emojiPicker.contains(e.tar
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&pickerOpen)closePicker();});
 
 // ==================== SD CONFIG ====================
-// FIX: declarado ANTES de send() para evitar problemas de hoisting con let
 let sdMode = false;
 let sdSeconds = 7;
 const sdBtn = document.getElementById("sdBtn");
@@ -496,7 +505,6 @@ document.addEventListener("click",e=>{
 });
 
 // ==================== TYPING ====================
-// FIX: declarado ANTES de send() por el mismo motivo
 let typingTimer = null;
 let isTyping = false;
 
@@ -547,9 +555,6 @@ async function hashRoom(password){
 function showToast(msg){toast.textContent=msg;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),3000);}
 
 // ---- CACHÉ LOCAL DE MENSAJES ----
-// Guarda hasta 50 mensajes por sala en localStorage.
-// Se borra cuando el server emite chat-deleted o el usuario borra manualmente.
-// Los mensajes SD nunca se cachean (son efímeros por diseño).
 const MSG_CACHE_PREFIX = "atun_msgs_";
 const MSG_CACHE_MAX = 50;
 
@@ -564,10 +569,8 @@ function saveMsgCache(messages){
 }
 
 function pushMsgCache(msg){
-  // No cachear mensajes autodestructivos
   if(msg.selfDestruct)return;
   const cache=loadMsgCache();
-  // Evitar duplicados
   if(cache.some(m=>m.id===msg.id))return;
   cache.push(msg);
   saveMsgCache(cache);
@@ -664,12 +667,10 @@ function initSocket(){
   socket.on("history",(messages)=>{
     document.getElementById("messages").innerHTML="";
     seenMessages.clear();
-    // Si el server devuelve historial, usarlo y actualizar caché
     if(messages.length>0){
       saveMsgCache(messages);
       messages.forEach(m=>{seenMessages.add(m.id);addMessage(m);});
     }else{
-      // Server sin historial (reinicio, inactividad) — restaurar desde caché local
       const cached=loadMsgCache();
       if(cached.length>0){
         cached.forEach(m=>{seenMessages.add(m.id);addMessage(m);});
@@ -729,7 +730,6 @@ function addMessage(msg){
   el.querySelector(".reply-btn").addEventListener("click",e=>{
     e.stopPropagation();setReply(el.dataset.id,el.dataset.nick,el.dataset.text);
   });
-  // FIX: bubble se toma del DOM recién creado, no de variable inexistente
   if(msg.selfDestruct){
     const bubble=el.querySelector(".msg-bubble");
     renderSdMessage(el,msg,bubble);
@@ -775,7 +775,6 @@ sendBtn.addEventListener("click",send);
 function send(){
   const text=msgInput.value.trim();
   if(!text||text.length>450)return;
-  // Detener typing
   isTyping=false;
   clearTimeout(typingTimer);
   clearTimeout(gifSuggestTimer);
@@ -789,7 +788,6 @@ function send(){
     sdSeconds:sdMode?sdSeconds:null
   };
   socket.emit("message",msg);
-  // Cachear mensaje propio inmediatamente (SD no se cachea — pushMsgCache lo ignora)
   pushMsgCache(msg);
   msgInput.value="";sendBtn.disabled=true;
   clearReply();closePicker();closeGifPicker();closeGifSuggest();
@@ -882,8 +880,6 @@ function startSdCountdown(bubble,msgId,seconds){
   bubble.appendChild(timerEl);
   let remaining=seconds;
 
-  // Duración del pulso basada en segundos absolutos restantes, no en ratio
-  // Así funciona igual de dramático con 3s que con 30s
   function getPulseDuration(rem){
     if(rem>7)  return 1.5;
     if(rem>5)  return 1.1;
@@ -920,13 +916,10 @@ function renderSdMessage(el,msg,bubble){
   const isMe=msg.nick===nick;
 
   if(isMe){
-    // EMISOR: ve el mensaje normal con borde rojo, sin lock, sin countdown
     bubble.classList.add("sd-sent");
-    // El contenido ya está en el bubble desde addMessage, no hay que tocar nada más
     return;
   }
 
-  // RECEPTOR: vaciar bubble y mostrar lock
   bubble.innerHTML="";
   bubble.classList.add("sd-locked");
 
@@ -939,11 +932,9 @@ function renderSdMessage(el,msg,bubble){
     if(!bubble.classList.contains("sd-locked"))return;
     bubble.classList.remove("sd-locked");
     bubble.classList.add("sd-unlocked");
-    // Limpiar animación previa antes de que startSdCountdown ponga la suya
     bubble.style.animation="";
     hint.remove();
 
-    // Reconstruir contenido
     const t=new Date(msg.time).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
     let replyHtml="";
     if(msg.replyTo){
