@@ -11,18 +11,26 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto;}
 body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:center;align-items:center;}
 /* ---- LOGIN ---- */
-#login{width:100%;max-width:420px;background:#121826;padding:40px;border-radius:14px;box-shadow:0 15px 40px rgba(0,0,0,0.4);}
-#login h2{text-align:center;margin-bottom:20px;}
-#login input{width:100%;padding:14px;margin-bottom:12px;border:none;border-radius:8px;background:#0b0f19;color:white;transition:0.2s;}
-#login input:focus{outline:none;box-shadow:0 0 8px #2563eb;}
-#login button{width:100%;padding:14px;border:none;border-radius:8px;background:#2563eb;color:white;cursor:pointer;transition:0.2s;}
+#login{width:100%;max-width:420px;background:#0f1623;padding:32px;border-radius:14px;box-shadow:0 15px 40px rgba(0,0,0,0.4);}
+#login-brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+#login-brand-icon{font-size:26px;}
+#login-brand-name{font-size:20px;font-weight:600;color:#e2e8f0;}
+#login-brand-sub{font-size:12px;color:#4b5563;margin-bottom:24px;}
+#login-field-label{font-size:11px;color:#6b7280;margin-bottom:5px;letter-spacing:0.05em;text-transform:uppercase;}
+#dummy{width:100%;box-sizing:border-box;padding:14px;border-radius:8px;border:1px solid #1f2937;background:#0b0f19;color:white;font-size:14px;margin-bottom:4px;resize:none;font-family:inherit;transition:0.2s;}
+#dummy:focus{outline:none;box-shadow:0 0 8px #2563eb;border-color:#2563eb;}
+#login-counter{font-size:11px;color:#374151;text-align:right;margin-bottom:14px;}
+#login-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+#login input[type=text],#login input[type=password]{width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid #1f2937;background:#0b0f19;color:white;font-size:13px;font-family:inherit;transition:0.2s;}
+#login input[type=text]:focus,#login input[type=password]:focus{outline:none;box-shadow:0 0 8px #2563eb;border-color:#2563eb;}
+#login button{width:100%;padding:14px;border:none;border-radius:8px;background:#2563eb;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;}
 #login button:hover{background:#1e40af;}
 #loginError{color:#ef4444;font-size:13px;text-align:center;margin-top:8px;min-height:18px;}
 #loginStatus{font-size:12px;text-align:center;margin-top:6px;min-height:16px;color:#facc15;opacity:0;transition:opacity 0.4s;}
 #loginStatus.visible{opacity:1;}
 #loginStatus.ok{color:#22c55e;}
 #loginStatus.error{color:#ef4444;}
-#loginHint{font-size:12px;color:#4b5563;text-align:center;margin-top:10px;line-height:1.5;}
+#loginHint{font-size:12px;color:#374151;text-align:center;margin-top:12px;line-height:1.5;}
 /* ---- CHAT ---- */
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
 #header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
@@ -251,14 +259,22 @@ body.amoled #overlay{background:#000;}
 
 <!-- LOGIN -->
 <div id="login">
-  <h2>Atún - Datos Curiosos</h2>
-  <input id="dummy" placeholder="Ingresa tu dato curioso">
-  <input id="nick" placeholder="Nick">
-  <input id="room" type="password" placeholder="Palabra">
-  <button id="loginBtn" type="button">Publicar dato</button>
+  <div id="login-brand">
+    <span id="login-brand-icon">🐟</span>
+    <span id="login-brand-name">Soy un atún curioso</span>
+  </div>
+  <div id="login-brand-sub">Comparte datos curiosos de cualquier tema</div>
+  <div id="login-field-label">Tu dato curioso</div>
+  <textarea id="dummy" rows="3" placeholder="¿Sabías que los atunes pueden nadar a 70 km/h...?"></textarea>
+  <div id="login-counter">0 / 280</div>
+  <div id="login-row">
+    <input id="nick" type="text" placeholder="Tu apodo">
+    <input id="room" type="password" placeholder="Código de acuario">
+  </div>
+  <button id="loginBtn" type="button">Publicar dato 🐟</button>
   <div id="loginError"></div>
   <div id="loginStatus"></div>
-  <p id="loginHint">Si el atún está despierto, pero el acuario vacío, contáctanos en Instagram!</p>
+  <p id="loginHint">Si el atún está despierto, pero el acuario vacío, ¡contáctanos en Instagram!</p>
 </div>
 
 <!-- CHAT -->
@@ -1212,6 +1228,13 @@ window.addEventListener("load",()=>{
   }
   loginEl.style.display="block";chatEl.style.display="none";overlay.style.display="none";
   resetInactivity();probeServer();
+  const dummyTA=document.getElementById("dummy");
+  const counter=document.getElementById("login-counter");
+  dummyTA.addEventListener("input",()=>{
+    const len=dummyTA.value.length;
+    counter.textContent=len+" / 280";
+    counter.style.color=len>260?"#ef4444":"#374151";
+  });
 });
 function probeServer(){
   const statusEl=document.getElementById("loginStatus");
