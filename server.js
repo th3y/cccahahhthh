@@ -61,15 +61,53 @@ setInterval(() => {
   saveRooms(rooms);
 }, 15000);
 
-// Limpieza automática cada 24h
-setInterval(() => {
+// -------------------- LIMPIEZA DIARIA 3 AM CENTRAL --------------------
+// Obtiene la hora actual en US Central (America/Chicago) como { h, m, s }
+function getCentralTime() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false
+  }).formatToParts(now);
+  return {
+    h: parseInt(parts.find(p => p.type === "hour").value),
+    m: parseInt(parts.find(p => p.type === "minute").value),
+    s: parseInt(parts.find(p => p.type === "second").value)
+  };
+}
+
+function runCleanup() {
   for (const roomId of Object.keys(rooms)) {
     rooms[roomId].history = [];
     io.to(roomId).emit("chat-deleted");
   }
   saveRooms(rooms);
-  console.log("[Limpieza] Historial de todas las salas eliminado.");
-}, 24 * 60 * 60 * 1000);
+  console.log("[Limpieza] Historial eliminado a las 3:00 AM Central.");
+}
+
+// Polling cada 5 segundos — dispara UNA sola vez cuando son exactamente las 3:00 AM
+// (ventana de 0:00 a 0:10 para no depender del segundo exacto)
+let cleanupFiredToday = false;
+
+setInterval(() => {
+  const { h, m, s } = getCentralTime();
+
+  // Resetea el flag fuera de la ventana de las 3 AM (por ej. a las 3:01)
+  if (h === 3 && m >= 1) {
+    cleanupFiredToday = false;
+  }
+
+  // Dispara en la ventana 3:00:00 - 3:00:10
+  if (h === 3 && m === 0 && s <= 10 && !cleanupFiredToday) {
+    cleanupFiredToday = true;
+    runCleanup();
+  }
+}, 5000);
+
+console.log("[Limpieza] Scheduler activo — limpieza diaria a las 3:00 AM Central (America/Chicago).");
 
 // -------------------- SOCKET.IO --------------------
 io.on("connection", (socket) => {
@@ -144,7 +182,6 @@ io.on("connection", (socket) => {
   });
 
   // ---------- SD DESTROY ----------
-  // Solo reemite a los otros — quien destruye ya lo maneja localmente con el countdown
   socket.on("sd-destroy", (data) => {
     socket.to(data.room).emit("sd-destroy", { msgId: data.msgId });
   });
@@ -153,8 +190,11 @@ io.on("connection", (socket) => {
   socket.on("delete-chat", (data) => {
     const { room, code } = data;
     if (code !== DELETE_CODE) return;
-    if (rooms[room]) rooms[room].history = [];
-    io.to(room).emit("chat-deleted");
+    if (rooms[room]) {
+      rooms[room].history = [];
+      saveRooms(rooms);
+      io.to(room).emit("chat-deleted");
+    }
   });
 
   // ---------- PING ----------
