@@ -40,6 +40,21 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #deleteBtn{background:#161b27;border:1px solid #2a2f3d;color:#4b5563;padding:6px 10px;border-radius:6px;cursor:pointer;transition:0.2s;}
 #deleteBtn:hover{background:#1f2937;color:#6b7280;}
 #headerBtns{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+#expandBtn{background:#161b27;border:1px solid #2a2f3d;color:#4b5563;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:18px;font-weight:300;line-height:1;transition:background 0.2s;}
+#expandBtn:hover{background:#1f2937;color:#6b7280;}
+#collapseBtn{background:transparent;border:none;color:#4b5563;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:18px;font-weight:300;line-height:1;transition:background 0.2s;}
+#collapseBtn:hover{color:#6b7280;}
+#sensitiveGroup{display:none;align-items:center;gap:5px;border:1px solid #2a2f3d;border-radius:8px;padding:3px 5px;}
+#sensitiveGroup.open{display:flex;}
+.btn-mobile{display:none;}
+.btn-desktop{display:inline;}
+@media(max-width:480px){
+  #expandBtn{display:none;}
+  #sensitiveGroup{display:flex;border:none;padding:0;}
+  #collapseBtn{display:none;}
+  .btn-mobile{display:inline;}
+  .btn-desktop{display:none;}
+}
 #panicBtn{background:#161b27;border:1px solid #2a2f3d;color:#4b5563;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s,transform 0.1s;}
 #panicBtn:hover{background:#1f2937;color:#6b7280;}
 #panicBtn:active{transform:scale(0.92);}
@@ -59,8 +74,8 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 /* ---- BOTON CITAR ---- */
 .msg-row{position:relative;}
 .msg-bubble{padding:10px 16px;border-radius:12px;display:inline-flex;flex-direction:column;font-size:14px;min-width:160px;max-width:100%;word-break:break-word;overflow-wrap:break-word;box-sizing:border-box;}
-.message.me .msg-bubble{background:#252d4a;color:#c7d0f0;}
-.message.other .msg-bubble{background:#1c2333;color:#94a3b8;}
+.message.me .msg-bubble{background:#141820;color:#63718a;}
+.message.other .msg-bubble{background:#131d30;color:#5d7fa3;}
 .reply-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:white;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;transition:background 0.15s,transform 0.1s;padding:0;line-height:1;z-index:1;}
 .message.other .reply-btn{right:-36px;}
 .message.me .reply-btn{left:-36px;}
@@ -82,12 +97,14 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #cancelReply{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
 #cancelReply:hover{color:white;}
 /* ---- TYPING ---- */
-#typingIndicator{flex-shrink:0;min-height:22px;padding:0 16px 6px;font-size:12px;color:#6b7280;font-style:italic;transition:opacity 0.3s;opacity:0;}
+#typingIndicator{flex-shrink:0;min-height:36px;padding:6px 16px;display:flex;align-items:center;gap:8px;opacity:0;transition:opacity 0.3s;}
 #typingIndicator.visible{opacity:1;}
-@keyframes blink{0%,100%{opacity:0.3;}50%{opacity:1;}}
-#typingDots span{animation:blink 1.2s infinite;}
-#typingDots span:nth-child(2){animation-delay:0.2s;}
-#typingDots span:nth-child(3){animation-delay:0.4s;}
+#typingBubble{background:#131d30;border-radius:18px;padding:8px 14px;display:inline-flex;align-items:center;gap:5px;}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:#5d7fa3;display:inline-block;animation:warmPulse 1.4s ease-in-out infinite;}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes warmPulse{0%,100%{opacity:0.2;transform:scale(0.8);}50%{opacity:1;transform:scale(1);}}
+#typingName{font-size:11px;color:#334155;font-style:italic;}
 /* ---- GIF SUGERIDO ---- */
 #gifSuggest{flex-shrink:0;display:none;flex-direction:column;border-top:1px solid #1f2937;background:#0f1623;padding:8px 10px;gap:6px;animation:pickerIn 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards;}
 #gifSuggest.open{display:flex;}
@@ -197,6 +214,8 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   #gifBtn{height:36px;}
   #sdBtn{margin-left:auto;}
   #accessoryRow{padding:0 2px;}
+  #msg{padding:14px;font-size:17px;}
+  #sendBtn{padding:14px 16px;}
 }
 /* ---- AMOLED THEME ---- */
 body.amoled{background:#000;}
@@ -205,8 +224,8 @@ body.amoled #login input{background:#000;border:1px solid #1a1a1a;}
 body.amoled #chat{background:#000;}
 body.amoled #header{background:#000;border-bottom-color:#111;}
 body.amoled #messages{background:#000;}
-body.amoled .message.me .msg-bubble{background:#0d1120;}
-body.amoled .message.other .msg-bubble{background:#080c14;}
+body.amoled .message.me .msg-bubble{background:#0a0c10;color:#4a5568;}
+body.amoled .message.other .msg-bubble{background:#0a1020;color:#3d5a78;}
 body.amoled #inputArea{background:#000;border-top-color:#111;}
 body.amoled #inputRow #msg{background:#0a0a0a;border:1px solid #1a1a1a;}
 body.amoled #accessoryRow button{background:#0a0a0a;border-color:#1a1a1a;}
@@ -215,6 +234,7 @@ body.amoled .online-chip{background:#0a0a0a;border-color:#1a1a1a;}
 body.amoled #replyPreview{background:#000;border-top-color:#111;}
 body.amoled #gifSuggest{background:#000;border-top-color:#111;}
 body.amoled #typingIndicator{background:#000;}
+body.amoled #overlay{background:#000;}
 /* ---- TOAST ---- */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:100;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -253,15 +273,29 @@ body.amoled #typingIndicator{background:#000;}
     <div id="headerBtns">
       <button id="themeToggle" title="Modo AMOLED">◑</button>
       <button id="soundToggle" title="Sonido de notificación">🔔</button>
-      <button id="panicBtn" title="Botón de pánico">🚨</button>
-      <button id="deleteBtn">Borrar</button>
+      <!-- Botón + solo en desktop -->
+      <button id="expandBtn" title="Más opciones">+</button>
+      <!-- Grupo sensible -->
+      <div id="sensitiveGroup">
+        <button id="panicBtn" title="Botón de pánico">🚨</button>
+        <button id="deleteBtn">
+          <span class="btn-desktop">Borrar</span>
+          <span class="btn-mobile">Enlatar</span>
+        </button>
+        <button id="collapseBtn" title="Ocultar">−</button>
+      </div>
     </div>
   </div>
 
   <div id="messages"></div>
 
   <div id="typingIndicator">
-    <span id="typingName"></span> está escribiendo<span id="typingDots"><span>.</span><span>.</span><span>.</span></span>
+    <div id="typingBubble">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>
+    <span id="typingName"></span>
   </div>
 
   <div id="replyPreview">
@@ -1033,6 +1067,13 @@ function renderOnlineUsers(users){
   });
   if(extra>0){const more=document.createElement("span");more.className="online-chip more";more.textContent="+"+extra+" más";container.appendChild(more);}
 }
+
+// ---- HEADER EXPAND/COLLAPSE ----
+const expandBtn = document.getElementById("expandBtn");
+const collapseBtn = document.getElementById("collapseBtn");
+const sensitiveGroup = document.getElementById("sensitiveGroup");
+expandBtn.addEventListener("click",()=>sensitiveGroup.classList.add("open"));
+collapseBtn.addEventListener("click",()=>sensitiveGroup.classList.remove("open"));
 
 // ---- TEMA AMOLED ----
 const themeToggleBtn = document.getElementById("themeToggle");
