@@ -25,26 +25,29 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 #loginHint{font-size:12px;color:#4b5563;text-align:center;margin-top:10px;line-height:1.5;}
 /* ---- CHAT ---- */
 #chat{display:none;flex-direction:column;width:100%;max-width:750px;height:100dvh;}
-#header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;}
+#header{flex-shrink:0;padding:12px 16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+#headerLeft{flex:1;min-width:0;overflow:hidden;}
 #header b{font-size:18px;}
 #roomHash{font-size:12px;opacity:0.6;}
-#onlineUsers{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:nowrap;}
+#onlineUsers{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap;}
 .online-chip{font-size:11px;padding:2px 8px;border-radius:20px;background:#1f2937;color:#d1d5db;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;border:1px solid #374151;}
 .online-chip.me{border-color:#2563eb;color:#93c5fd;}
 .online-chip.more{color:#9ca3af;background:transparent;border-color:transparent;font-style:italic;padding-left:2px;}
 #status{font-size:13px;font-weight:bold;margin-top:2px;transition:color 0.3s ease;}
-.status-yellow{color:#facc15;}
-.status-green{color:#22c55e;}
-.status-red{color:#ef4444;}
-#deleteBtn{background:#ef4444;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;}
-#deleteBtn:hover{background:#b91c1c;}
-#headerBtns{display:flex;gap:8px;align-items:center;}
-#panicBtn{background:#7c3aed;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s,transform 0.1s;}
-#panicBtn:hover{background:#6d28d9;}
+.status-yellow{color:#92722a;}
+.status-green{color:#2d6a4f;}
+.status-red{color:#7f3030;}
+#deleteBtn{background:#161b27;border:1px solid #2a2f3d;color:#4b5563;padding:6px 10px;border-radius:6px;cursor:pointer;transition:0.2s;}
+#deleteBtn:hover{background:#1f2937;color:#6b7280;}
+#headerBtns{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+#panicBtn{background:#161b27;border:1px solid #2a2f3d;color:#4b5563;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s,transform 0.1s;}
+#panicBtn:hover{background:#1f2937;color:#6b7280;}
 #panicBtn:active{transform:scale(0.92);}
-#soundToggle{background:#1f2937;border:none;color:white;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s;}
-#soundToggle:hover{background:#374151;}
+#soundToggle{background:#161b27;border:1px solid #2a2f3d;color:#4b5563;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s;}
+#soundToggle:hover{background:#1f2937;color:#6b7280;}
 #soundToggle.muted{opacity:0.4;}
+#themeToggle{background:#161b27;border:1px solid #2a2f3d;color:#4b5563;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;transition:background 0.2s;}
+#themeToggle:hover{background:#1f2937;color:#6b7280;}
 /* ---- MENSAJES ---- */
 #messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
 .message{max-width:80%;display:flex;flex-direction:column;opacity:0;transform:translateY(10px);animation:fadeIn 0.3s forwards;}
@@ -56,8 +59,8 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 /* ---- BOTON CITAR ---- */
 .msg-row{position:relative;}
 .msg-bubble{padding:10px 16px;border-radius:12px;display:inline-flex;flex-direction:column;font-size:14px;min-width:160px;max-width:100%;word-break:break-word;overflow-wrap:break-word;box-sizing:border-box;}
-.message.me .msg-bubble{background:#2563eb;}
-.message.other .msg-bubble{background:#1f2937;}
+.message.me .msg-bubble{background:#252d4a;color:#c7d0f0;}
+.message.other .msg-bubble{background:#1c2333;color:#94a3b8;}
 .reply-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:white;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;transition:background 0.15s,transform 0.1s;padding:0;line-height:1;z-index:1;}
 .message.other .reply-btn{right:-36px;}
 .message.me .reply-btn{left:-36px;}
@@ -195,11 +198,31 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
   #sdBtn{margin-left:auto;}
   #accessoryRow{padding:0 2px;}
 }
+/* ---- AMOLED THEME ---- */
+body.amoled{background:#000;}
+body.amoled #login{background:#000;border:1px solid #1a1a1a;}
+body.amoled #login input{background:#000;border:1px solid #1a1a1a;}
+body.amoled #chat{background:#000;}
+body.amoled #header{background:#000;border-bottom-color:#111;}
+body.amoled #messages{background:#000;}
+body.amoled .message.me .msg-bubble{background:#0d1120;}
+body.amoled .message.other .msg-bubble{background:#080c14;}
+body.amoled #inputArea{background:#000;border-top-color:#111;}
+body.amoled #inputRow #msg{background:#0a0a0a;border:1px solid #1a1a1a;}
+body.amoled #accessoryRow button{background:#0a0a0a;border-color:#1a1a1a;}
+body.amoled #deleteBtn,body.amoled #panicBtn,body.amoled #soundToggle,body.amoled #themeToggle{background:#000;border-color:#1a1a1a;}
+body.amoled .online-chip{background:#0a0a0a;border-color:#1a1a1a;}
+body.amoled #replyPreview{background:#000;border-top-color:#111;}
+body.amoled #gifSuggest{background:#000;border-top-color:#111;}
+body.amoled #typingIndicator{background:#000;}
 /* ---- TOAST ---- */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:100;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* ---- OVERLAY ---- */
-#overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0b0f19;color:white;justify-content:center;align-items:center;font-size:24px;text-align:center;padding:20px;z-index:999;animation:fadeIn 0.5s forwards;}
+#overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0b0f19;color:white;justify-content:center;align-items:center;flex-direction:column;gap:24px;font-size:24px;text-align:center;padding:20px;z-index:999;animation:fadeIn 0.5s forwards;}
+#overlayText{transition:opacity 0.8s ease;max-width:600px;line-height:1.6;}
+#overlayText.fading{opacity:0;}
+#overlayClock{font-size:52px;font-weight:200;letter-spacing:0.05em;opacity:0.5;font-variant-numeric:tabular-nums;}
 @keyframes fadeIn{to{opacity:1;transform:translateY(0);}}
 @media (max-width:480px){#emojiPicker{width:calc(100vw - 20px);left:10px;}#emojiBody{max-height:160px;}}
 </style>
@@ -221,13 +244,14 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 <!-- CHAT -->
 <div id="chat">
   <div id="header">
-    <div>
+    <div id="headerLeft">
       <b>Atún</b>
       <div id="roomHash"></div>
       <div id="status" class="status-yellow">Iniciando...</div>
       <div id="onlineUsers"></div>
     </div>
     <div id="headerBtns">
+      <button id="themeToggle" title="Modo AMOLED">◑</button>
       <button id="soundToggle" title="Sonido de notificación">🔔</button>
       <button id="panicBtn" title="Botón de pánico">🚨</button>
       <button id="deleteBtn">Borrar</button>
@@ -300,7 +324,7 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 </div>
 
 <div id="toast"></div>
-<div id="overlay"></div>
+<div id="overlay"><div id="overlayClock"></div><span id="overlayText"></span></div>
 
 <!-- LIGHTBOX -->
 <div id="lightbox">
@@ -530,7 +554,120 @@ let room="",nick="";
 let coldTimer,inactivityTimer;
 let replyTo = null;
 
-const motivationMessages=["El corazón humano genera suficiente presión para expulsar sangre a 9 metros de distancia.","Los pulpos tienen tres corazones y su sangre es azul.","El Sol representa más del 99% de la masa de nuestro sistema solar.","Los flamencos nacen grises y se vuelven rosados por su alimentación.","La miel nunca se echa a perder; se han encontrado tarros de miles de años intactos.","Un día en Venus dura más que un año en Venus.","Los tiburones existen desde antes que los árboles.","El ADN humano y el del plátano comparten aproximadamente un 50% de similitud.","El cerebro humano puede generar aproximadamente 20 vatios de potencia eléctrica.","Existen más estrellas en el universo observable que granos de arena en todas las playas de la Tierra.","Las medusas existen desde hace más de 500 millones de años, antes que los dinosaurios.","El agua caliente se congela más rápido que el agua fría bajo ciertas condiciones, fenómeno llamado efecto Mpemba.","Los gatos no pueden percibir sabores dulces.","Las abejas pueden reconocer rostros humanos.","Las vacas tienen mejores amigas y se estresan si se separan de ellas.","Un solo rayo contiene suficiente energía para cocinar 100,000 rebanadas de pan.","Los murciélagos siempre giran a la izquierda al salir de una cueva.","El diamante más grande jamás encontrado pesaba más de 3,100 quilates.","Los cocodrilos no pueden sacar la lengua.","Los escorpiones brillan bajo luz ultravioleta.","La luna se aleja de la Tierra aproximadamente 3.8 cm por año.","Los pulpos pueden usar herramientas y abrir frascos para obtener comida.","Los elefantes son los únicos animales que no pueden saltar.","Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos: 7.","El corazón de una ballena azul es tan grande que un humano podría nadar por sus arterias.","El primer producto con código de barras escaneado fue un chicle Wrigley's en 1974.","Las hormigas no duermen y algunas especies pueden cargar hasta 50 veces su peso.","El cerebro humano tiene más conexiones que estrellas hay en la Vía Láctea.","El Monte Everest crece aproximadamente 4 mm cada año debido al movimiento de las placas tectónicas.","Los tiburones duermen con un ojo abierto y otro cerrado."];
+const motivationMessages = [
+"Un pulpo tiene tres corazones y dos de ellos dejan de latir cuando nada.",
+"El ADN de una sola célula humana mide cerca de 2 metros si se estira completamente.",
+"Las abejas pueden comunicar la ubicación de comida usando una danza especial.",
+"Los tiburones existían antes que los árboles.",
+"Las nutrias marinas duermen tomadas de las manos para no separarse mientras flotan.",
+"Los delfines tienen silbidos únicos que funcionan como nombres.",
+"Las estrellas de mar pueden regenerar brazos perdidos.",
+"Los cuervos pueden fabricar herramientas para obtener comida.",
+"Los pulpos pueden abrir frascos para alcanzar alimento.",
+"Las medusas existen desde hace más de 500 millones de años.",
+"El corazón de una ballena azul puede pesar más de 150 kg.",
+"Los elefantes pueden reconocerse en un espejo.",
+"Los koalas tienen huellas dactilares muy parecidas a las humanas.",
+"Las jirafas tienen la misma cantidad de vértebras en el cuello que los humanos.",
+"Los pingüinos emperador pueden bucear más de 500 metros.",
+"Las mariposas pueden saborear con sus patas.",
+"Los búhos pueden girar su cabeza hasta unos 270 grados.",
+"Los gatos no pueden percibir sabores dulces.",
+"Los perros tienen alrededor de 300 millones de receptores olfativos.",
+"Las vacas pueden formar amistades y estresarse si se separan.",
+"Los canguros no pueden caminar fácilmente hacia atrás.",
+"Los camaleones pueden mover sus ojos de forma independiente.",
+"Las libélulas son cazadoras extremadamente eficientes.",
+"Las hormigas viven en colonias altamente organizadas.",
+"Algunas hormigas cultivan hongos como alimento.",
+"Las ranas pueden absorber agua a través de su piel.",
+"Los murciélagos son los únicos mamíferos que pueden volar activamente.",
+"Los tiburones tienen esqueletos hechos de cartílago.",
+"Los pulpos tienen neuronas distribuidas en sus tentáculos.",
+"Las nutrias usan piedras como herramientas para abrir conchas.",
+"Los relámpagos pueden calentar el aire a más de 25,000 °C.",
+"La luz del Sol tarda unos 8 minutos en llegar a la Tierra.",
+"Un día en Venus dura más que su año.",
+"Saturno es tan poco denso que flotaría en agua si hubiera un océano lo bastante grande.",
+"La gravedad en la Luna es aproximadamente una sexta parte de la de la Tierra.",
+"El Sol contiene más del 99% de la masa del sistema solar.",
+"El sistema solar tarda unos 225 millones de años en orbitar la Vía Láctea.",
+"La Vía Láctea contiene cientos de miles de millones de estrellas.",
+"El universo observable tiene miles de millones de galaxias.",
+"Los agujeros negros tienen una gravedad tan intensa que ni la luz escapa.",
+"Las estrellas nacen en gigantescas nubes de gas llamadas nebulosas.",
+"Las estrellas de neutrones son tan densas que una cucharadita pesaría millones de toneladas.",
+"La Tierra gira a unos 1670 km/h en el ecuador.",
+"La atmósfera terrestre está compuesta principalmente de nitrógeno.",
+"El agua cubre alrededor del 71% de la superficie del planeta.",
+"El océano contiene aproximadamente el 97% del agua de la Tierra.",
+"La Antártida es el desierto más grande del planeta.",
+"El Monte Everest mide aproximadamente 8848 metros.",
+"Las placas tectónicas se mueven unos pocos centímetros al año.",
+"Los terremotos ocurren cuando la energía acumulada en fallas geológicas se libera.",
+"Los volcanes submarinos forman gran parte de la corteza oceánica.",
+"Las auroras polares ocurren cuando partículas solares interactúan con el campo magnético terrestre.",
+"El hielo flota porque es menos denso que el agua líquida.",
+"El sonido viaja más rápido en el agua que en el aire.",
+"Las estrellas fugaces son partículas que se queman en la atmósfera.",
+"Las plantas convierten la luz solar en energía mediante fotosíntesis.",
+"Las hojas cambian de color en otoño al disminuir la clorofila.",
+"Los árboles pueden comunicarse mediante redes de hongos en el suelo.",
+"Algunas semillas pueden permanecer dormidas durante décadas.",
+"Una cucharadita de suelo puede contener miles de millones de microorganismos.",
+"Las bacterias viven en casi todos los ambientes de la Tierra.",
+"Algunas bacterias sobreviven en ambientes extremadamente calientes.",
+"Los tardígrados pueden resistir condiciones extremas.",
+"El cerebro humano tiene aproximadamente 86 mil millones de neuronas.",
+"El cerebro humano consume cerca del 20% de la energía del cuerpo.",
+"El corazón humano late alrededor de 100,000 veces al día.",
+"El cuerpo humano adulto tiene 206 huesos.",
+"La piel humana se renueva aproximadamente cada mes.",
+"Los humanos parpadean alrededor de 15 a 20 veces por minuto.",
+"El oído humano detecta sonidos entre aproximadamente 20 y 20,000 Hz.",
+"Los huesos humanos son muy resistentes en relación con su peso.",
+"La sangre tarda alrededor de un minuto en recorrer el cuerpo.",
+"El ADN tiene forma de doble hélice.",
+"Las proteínas realizan muchas funciones esenciales en las células.",
+"Las enzimas aceleran reacciones químicas en los organismos.",
+"Los humanos comparten cerca del 98% de su ADN con los chimpancés.",
+"Las células del cuerpo humano se renuevan constantemente.",
+"Los glaciares almacenan gran parte del agua dulce del planeta.",
+"Las corrientes oceánicas ayudan a regular el clima global.",
+"Las nubes se forman por condensación del vapor de agua.",
+"El vapor de agua es un gas importante en el clima terrestre.",
+"Las estaciones del año existen por la inclinación del eje terrestre.",
+"La Luna influye en las mareas del planeta.",
+"La Luna se aleja de la Tierra unos centímetros cada año.",
+"Los arrecifes de coral son algunos de los ecosistemas más diversos.",
+"El plancton produce una gran parte del oxígeno del planeta.",
+"Las dunas del desierto cambian de forma con el viento.",
+"El hielo polar refleja gran parte de la luz solar.",
+"Las montañas se forman por el movimiento de placas tectónicas.",
+"Los camellos pueden cerrar parcialmente sus fosas nasales para evitar arena.",
+"Los gorilas pueden contraer resfriados humanos.",
+"Los tigres tienen rayas también en la piel.",
+"Las luciérnagas producen luz mediante una reacción química eficiente.",
+"Los delfines duermen con solo medio cerebro activo.",
+"Las abejas baten sus alas alrededor de 200 veces por segundo.",
+"Los pulpos pueden cambiar de color para camuflarse.",
+"Los tiburones pueden detectar campos eléctricos.",
+"Los cuervos pueden recordar rostros humanos.",
+"Los pingüinos tienen plumas muy densas para soportar el frío.",
+"Los caballitos de mar macho incuban los huevos.",
+"Las medusas no tienen cerebro ni corazón.",
+"Los murciélagos usan ecolocalización para orientarse.",
+"Las estrellas más masivas viven menos tiempo que las pequeñas.",
+"El Sol es una estrella de tipo enana amarilla.",
+"La velocidad de la luz es aproximadamente 300,000 km por segundo.",
+"La gravedad mantiene a los planetas en órbita.",
+"El núcleo de la Tierra genera el campo magnético del planeta",
+"El núcleo interno de la Tierra es sólido debido a la presión",
+"Las galaxias pueden colisionar entre sí durante millones de años",
+"Algunas estrellas terminan su vida explotando como supernovas",
+"Las supernovas pueden crear muchos de los elementos químicos pesados",
+"El hierro de la sangre se originó en antiguas estrellas"
+];
 
 const loginEl = document.getElementById("login");
 const chatEl = document.getElementById("chat");
@@ -813,9 +950,61 @@ document.getElementById("panicBtn").addEventListener("click",()=>{
 });
 
 // ---- OVERLAY ----
-function showOverlayForced(){overlay.style.display="flex";overlay.innerText=motivationMessages[Math.floor(Math.random()*motivationMessages.length)];}
+let overlayRotationTimer = null;
+
+function getRandomMotivation(current){
+  let msg;
+  do { msg = motivationMessages[Math.floor(Math.random()*motivationMessages.length)]; }
+  while(msg===current && motivationMessages.length>1);
+  return msg;
+}
+
+function setOverlayText(text){
+  const el = document.getElementById("overlayText");
+  el.classList.add("fading");
+  setTimeout(()=>{
+    el.textContent = text;
+    el.classList.remove("fading");
+  }, 800);
+}
+
+let overlayClockTimer = null;
+
+function updateOverlayClock(){
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,"0");
+  const m = String(now.getMinutes()).padStart(2,"0");
+  const s = String(now.getSeconds()).padStart(2,"0");
+  document.getElementById("overlayClock").textContent = `${h}:${m}:${s}`;
+}
+
+function startOverlayRotation(){
+  stopOverlayRotation();
+  updateOverlayClock();
+  overlayClockTimer = setInterval(updateOverlayClock, 1000);
+  overlayRotationTimer = setInterval(()=>{
+    const current = document.getElementById("overlayText").textContent;
+    setOverlayText(getRandomMotivation(current));
+  }, 30000);
+}
+
+function stopOverlayRotation(){
+  clearInterval(overlayRotationTimer);
+  clearInterval(overlayClockTimer);
+  overlayRotationTimer = null;
+  overlayClockTimer = null;
+}
+
+function showOverlayForced(){
+  const el = document.getElementById("overlayText");
+  const msg = getRandomMotivation(el.textContent);
+  overlay.style.display="flex";
+  el.textContent = msg;
+  el.classList.remove("fading");
+  startOverlayRotation();
+}
 function showOverlay(){if(isMobile())return;showOverlayForced();}
-function hideOverlay(){overlay.style.display="none";}
+function hideOverlay(){overlay.style.display="none";stopOverlayRotation();}
 
 // ---- INACTIVIDAD ----
 function resetInactivity(){clearTimeout(inactivityTimer);inactivityTimer=setTimeout(showOverlay,50000);}
@@ -826,6 +1015,10 @@ window.addEventListener("keydown",e=>{
   if(e.ctrlKey&&e.key.toLowerCase()==="q"){
     if(isMobile())return;
     if(chatEl.style.display==="flex"&&overlay.style.display!=="flex")showOverlay();else hideOverlay();
+  }
+  if(e.ctrlKey&&e.key.toLowerCase()==="a"&&chatEl.style.display==="flex"){
+    e.preventDefault();
+    if(overlay.style.display!=="flex") document.getElementById("panicBtn").click();
   }
 });
 
@@ -840,6 +1033,20 @@ function renderOnlineUsers(users){
   });
   if(extra>0){const more=document.createElement("span");more.className="online-chip more";more.textContent="+"+extra+" más";container.appendChild(more);}
 }
+
+// ---- TEMA AMOLED ----
+const themeToggleBtn = document.getElementById("themeToggle");
+function applyTheme(theme){
+  document.body.classList.toggle("amoled", theme==="amoled");
+  themeToggleBtn.style.color = theme==="amoled" ? "#c7d0f0" : "";
+  localStorage.setItem("atun_theme", theme);
+}
+themeToggleBtn.addEventListener("click",()=>{
+  const current = localStorage.getItem("atun_theme")||"default";
+  applyTheme(current==="amoled" ? "default" : "amoled");
+});
+// Aplicar tema guardado al cargar
+applyTheme(localStorage.getItem("atun_theme")||"default");
 
 // ---- SONIDO ----
 let soundEnabled = true;
@@ -956,7 +1163,12 @@ setInterval(()=>{if(socket&&socket.connected)socket.emit("ping-check");},3*60*10
 // ---- INIT ----
 window.addEventListener("load",()=>{
   const savedNick=localStorage.getItem("nick");
-  if(savedNick)document.getElementById("nick").value=savedNick;
+  if(savedNick){
+    document.getElementById("nick").value=savedNick;
+    document.getElementById("room").focus();
+  } else {
+    document.getElementById("nick").focus();
+  }
   loginEl.style.display="block";chatEl.style.display="none";overlay.style.display="none";
   resetInactivity();probeServer();
 });
