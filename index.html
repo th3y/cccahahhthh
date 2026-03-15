@@ -1114,15 +1114,30 @@ soundToggleBtn.addEventListener("click",()=>{
   soundToggleBtn.classList.toggle("muted",!soundEnabled);
   soundToggleBtn.title=soundEnabled?"Sonido activado":"Sonido desactivado";
 });
+let _audioCtx=null;
+function getAudioCtx(){
+  if(!_audioCtx||_audioCtx.state==="closed"){
+    _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  }
+  if(_audioCtx.state==="suspended")_audioCtx.resume();
+  return _audioCtx;
+}
+// Desbloquea AudioContext en la primera interacción del usuario
+document.addEventListener("click",()=>getAudioCtx(),{once:true});
+document.addEventListener("keydown",()=>getAudioCtx(),{once:true});
+document.addEventListener("touchstart",()=>getAudioCtx(),{once:true});
+
 function playNotif(){
-  if(!soundEnabled)return;if(overlay.style.display==="flex")return;if(document.hasFocus())return;
+  if(!soundEnabled)return;if(document.hasFocus())return;
+  const isOverlay=overlay.style.display==="flex";
+  const volume=isOverlay?0.012:0.04;
   try{
-    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const ctx=getAudioCtx();
     const osc=ctx.createOscillator();const gain=ctx.createGain();
     osc.connect(gain);gain.connect(ctx.destination);osc.type="sine";
     osc.frequency.setValueAtTime(660,ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(520,ctx.currentTime+0.15);
-    gain.gain.setValueAtTime(0.04,ctx.currentTime);
+    gain.gain.setValueAtTime(volume,ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
     osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.3);
   }catch(e){}
