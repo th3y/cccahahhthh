@@ -237,12 +237,21 @@ body.amoled .message.other .msg-bubble{background:#0a1525;color:#5a82a8;}
 body.amoled #inputArea{background:#000;border-top-color:#111;}
 body.amoled #inputRow #msg{background:#0a0a0a;border:1px solid #1a1a1a;}
 body.amoled #accessoryRow button{background:#0a0a0a;border-color:#1a1a1a;}
+body.amoled #sdBtn.active{background:#7f1d1d!important;border-color:#ef4444!important;color:#fca5a5!important;}
 body.amoled #deleteBtn,body.amoled #panicBtn,body.amoled #soundToggle,body.amoled #themeToggle{background:#000;border-color:#1a1a1a;}
 body.amoled .online-chip{background:#0a0a0a;border-color:#1a1a1a;}
 body.amoled #replyPreview{background:#000;border-top-color:#111;}
 body.amoled #gifSuggest{background:#000;border-top-color:#111;}
 body.amoled #typingIndicator{background:#000;}
 body.amoled #overlay{background:#000;}
+/* ---- MENSAJE /ME ---- */
+.message.me-action{align-self:center;max-width:90%;}
+.me-action .msg-row{display:flex;justify-content:center;}
+.me-action .msg-bubble{background:transparent!important;border:none!important;padding:4px 12px;min-width:0;box-shadow:none!important;}
+.me-action-text{font-style:italic;color:#a78bfa;font-size:13px;text-align:center;}
+.me-action-text .me-nick{font-weight:700;color:#c4b5fd;}
+body.amoled .me-action-text{color:#9d7fe0;}
+body.amoled .me-action-text .me-nick{color:#b89cf0;}
 /* ---- TOAST ---- */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:100;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -781,6 +790,10 @@ function extractYouTubeId(text){
 }
 function isImageUrl(text){return /^https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s]*)?$/i.test(text.trim());}
 function renderContent(text){
+  if(text.startsWith("[ME]")){
+    const action=text.slice(4);
+    return `<span class="me-action-text">* <span class="me-nick"></span> ${escapeHtml(action)}</span>`;
+  }
   if(text.startsWith("[GIF]")){
     const url=text.slice(5);
     return `<div class="msg-gif"><img src="${url}" alt="GIF" loading="lazy"></div>`;
@@ -896,7 +909,8 @@ function initSocket(){
 function addMessage(msg){
   const el=document.createElement("div");
   const isMe=msg.nick===nick;
-  el.className="message "+(isMe?"me":"other");
+  const isMeAction=msg.text.startsWith("[ME]");
+  el.className="message "+(isMeAction?"me-action":(isMe?"me":"other"));
   el.dataset.id=msg.id;el.dataset.nick=msg.nick;
   el.dataset.text=msg.text.startsWith("[GIF]")?"🖼 GIF":msg.text;
   const t=new Date(msg.time).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
@@ -907,16 +921,23 @@ function addMessage(msg){
   el.innerHTML=`
     <div class="msg-row">
       <div class="msg-bubble">
-        <div class="author">${escapeHtml(msg.nick)}</div>
+        ${isMeAction?"":(`<div class="author">${escapeHtml(msg.nick)}</div>`)}
         ${replyHtml}
         <div class="sd-content">${renderContent(msg.text)}</div>
-        <div class="timestamp">${t}</div>
+        ${isMeAction?"":`<div class="timestamp">${t}</div>`}
       </div>
-      <button class="reply-btn" title="Citar">↩</button>
+      ${isMeAction?"":`<button class="reply-btn" title="Citar">↩</button>`}
     </div>`;
-  el.querySelector(".reply-btn").addEventListener("click",e=>{
-    e.stopPropagation();setReply(el.dataset.id,el.dataset.nick,el.dataset.text);
-  });
+  if(isMeAction){
+    const nickEl=el.querySelector(".me-nick");
+    if(nickEl)nickEl.textContent=escapeHtml(msg.nick);
+  }
+  const replyBtnEl=el.querySelector(".reply-btn");
+  if(replyBtnEl){
+    replyBtnEl.addEventListener("click",e=>{
+      e.stopPropagation();setReply(el.dataset.id,el.dataset.nick,el.dataset.text);
+    });
+  }
   if(msg.selfDestruct){
     const bubble=el.querySelector(".msg-bubble");
     renderSdMessage(el,msg,bubble);
@@ -960,8 +981,12 @@ sendBtn.addEventListener("click",send);
 
 // ---- ENVIAR ----
 function send(){
-  const text=msgInput.value.trim();
+  let text=msgInput.value.trim();
   if(!text||text.length>450)return;
+  // Interceptar comando /me
+  if(text.toLowerCase().startsWith("/me ")){
+    text="[ME]"+text.slice(4);
+  }
   isTyping=false;
   clearTimeout(typingTimer);
   clearTimeout(gifSuggestTimer);
