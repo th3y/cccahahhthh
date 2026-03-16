@@ -855,17 +855,17 @@ async function join(){
   const loginStatus=document.getElementById("loginStatus");
   errEl.textContent="";loginStatus.textContent="";loginStatus.classList.remove("visible");
   if(!nick){errEl.textContent="Ingresa un nick";return;}
-  if(!pass){errEl.textContent="Ingresa un código";return;}
+  if(!pass){errEl.textContent="Datos incompletos";return;}
   const btn=document.getElementById("loginBtn");
   btn.disabled=true;
   loginStatus.textContent="Despertando al atún...";loginStatus.classList.add("visible");
   const slowTimer=setTimeout(()=>{loginStatus.textContent="El atún se está despertando, espera...";},3000);
   const tempSocket=io(SERVER_URL);
   tempSocket.on("connect",()=>{
-    clearTimeout(slowTimer);loginStatus.textContent="Verificando código...";
+    clearTimeout(slowTimer);loginStatus.textContent="Intentando ingresar...";
     tempSocket.emit("validate-code",{code:pass},(res)=>{
       tempSocket.disconnect();btn.disabled=false;loginStatus.classList.remove("visible");
-      if(!res.ok){errEl.textContent="Código inválido";return;}
+      if(!res.ok){errEl.textContent="Hay algo raro...";return;}
       proceedToChat(pass);
     });
   });
