@@ -1046,7 +1046,7 @@ function send(){
   // Interceptar comando /dado o /roll
   else if(text.toLowerCase().startsWith("/dado")||text.toLowerCase().startsWith("/roll")){
     const parts=text.split(/\s+/);
-    let sides=6;
+    let sides=10;
     if(parts[1]){
       const m=parts[1].match(/^(?:1?d)?(\d+)$/i);
       if(m)sides=Math.min(Math.max(parseInt(m[1]),2),100);
