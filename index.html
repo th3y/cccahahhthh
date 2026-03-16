@@ -252,6 +252,24 @@ body.amoled #overlay{background:#000;}
 .me-action-text .me-nick{font-weight:700;color:#c4b5fd;}
 body.amoled .me-action-text{color:#9d7fe0;}
 body.amoled .me-action-text .me-nick{color:#b89cf0;}
+/* ---- MENSAJE /SPOILER ---- */
+.spoiler-wrap{display:inline;background:#374151;color:transparent;border-radius:4px;padding:1px 6px;cursor:pointer;user-select:none;transition:color 0.25s,background 0.25s;font-size:inherit;line-height:inherit;}
+.spoiler-wrap::before{content:"👁 spoiler";color:#9ca3af;font-size:11px;font-style:italic;}
+.spoiler-wrap.revealed::before{display:none;}
+.spoiler-wrap.revealed{color:inherit;background:#2d3748;cursor:default;}
+/* ---- MENSAJE /COLOR ---- */
+.colored-text{font-weight:600;}
+/* ---- MENSAJE /ROLL ---- */
+.message.roll-action{align-self:center;max-width:90%;}
+.roll-action .msg-row{display:flex;justify-content:center;}
+.roll-action .msg-bubble{background:transparent!important;border:none!important;padding:4px 12px;min-width:0;box-shadow:none!important;}
+.roll-result{font-size:13px;text-align:center;color:#fbbf24;}
+.roll-result .roll-nick{font-weight:700;color:#fcd34d;}
+.roll-result .roll-num{font-size:18px;font-weight:800;color:#f59e0b;}
+.roll-result .roll-sides{font-size:11px;opacity:0.7;}
+body.amoled .roll-result{color:#d4a017;}
+body.amoled .roll-result .roll-nick{color:#e8c44a;}
+body.amoled .roll-result .roll-num{color:#c9920f;}
 /* ---- TOAST ---- */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#ef4444;color:white;padding:8px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:100;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -278,7 +296,7 @@ body.amoled .me-action-text .me-nick{color:#b89cf0;}
   <div id="login-counter">0 / 280</div>
   <div id="login-row">
     <input id="nick" type="text" placeholder="Tu apodo">
-    <input id="room" type="password" placeholder="Código de acuario">
+    <input id="room" type="password" placeholder="">
   </div>
   <button id="loginBtn" type="button">Publicar dato 🐟</button>
   <div id="loginError"></div>
@@ -789,10 +807,23 @@ function extractYouTubeId(text){
   return null;
 }
 function isImageUrl(text){return /^https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s]*)?$/i.test(text.trim());}
+const COLOR_MAP={rojo:"#ef4444",azul:"#60a5fa",verde:"#4ade80",amarillo:"#facc15",purpura:"#c084fc",morado:"#c084fc"};
 function renderContent(text){
   if(text.startsWith("[ME]")){
     const action=text.slice(4);
     return `<span class="me-action-text">* <span class="me-nick"></span> ${escapeHtml(action)}</span>`;
+  }
+  if(text.startsWith("[SPOILER]")){
+    const content=escapeHtml(text.slice(9));
+    return `<span class="spoiler-wrap" onclick="this.classList.toggle('revealed')" title="Click para revelar">${content}</span>`;
+  }
+  if(text.startsWith("[COLOR:")){
+    const m=text.match(/^\[COLOR:([a-z]+)\](.+)$/s);
+    if(m){const hex=COLOR_MAP[m[1]]||"#e2e8f0";return `<span class="colored-text" style="color:${hex}">${escapeHtml(m[2])}</span>`;}
+  }
+  if(text.startsWith("[ROLL]")){
+    const m=text.match(/^\[ROLL\](\d+)\/(\d+)$/);
+    if(m){return `<span class="roll-result">🎲 <span class="roll-nick"></span> sacó <span class="roll-num">${m[1]}</span> <span class="roll-sides">(d${m[2]})</span></span>`;}
   }
   if(text.startsWith("[GIF]")){
     const url=text.slice(5);
@@ -910,7 +941,9 @@ function addMessage(msg){
   const el=document.createElement("div");
   const isMe=msg.nick===nick;
   const isMeAction=msg.text.startsWith("[ME]");
-  el.className="message "+(isMeAction?"me-action":(isMe?"me":"other"));
+  const isRollAction=msg.text.startsWith("[ROLL]");
+  const isActionMsg=isMeAction||isRollAction;
+  el.className="message "+(isMeAction?"me-action":isRollAction?"roll-action":(isMe?"me":"other"));
   el.dataset.id=msg.id;el.dataset.nick=msg.nick;
   el.dataset.text=msg.text.startsWith("[GIF]")?"🖼 GIF":msg.text;
   const t=new Date(msg.time).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
@@ -921,15 +954,19 @@ function addMessage(msg){
   el.innerHTML=`
     <div class="msg-row">
       <div class="msg-bubble">
-        ${isMeAction?"":(`<div class="author">${escapeHtml(msg.nick)}</div>`)}
+        ${isActionMsg?"":(`<div class="author">${escapeHtml(msg.nick)}</div>`)}
         ${replyHtml}
         <div class="sd-content">${renderContent(msg.text)}</div>
-        ${isMeAction?"":`<div class="timestamp">${t}</div>`}
+        ${isActionMsg?"":`<div class="timestamp">${t}</div>`}
       </div>
-      ${isMeAction?"":`<button class="reply-btn" title="Citar">↩</button>`}
+      ${isActionMsg?"":`<button class="reply-btn" title="Citar">↩</button>`}
     </div>`;
   if(isMeAction){
     const nickEl=el.querySelector(".me-nick");
+    if(nickEl)nickEl.textContent=escapeHtml(msg.nick);
+  }
+  if(isRollAction){
+    const nickEl=el.querySelector(".roll-nick");
     if(nickEl)nickEl.textContent=escapeHtml(msg.nick);
   }
   const replyBtnEl=el.querySelector(".reply-btn");
@@ -986,6 +1023,36 @@ function send(){
   // Interceptar comando /me
   if(text.toLowerCase().startsWith("/me ")){
     text="[ME]"+text.slice(4);
+  }
+  // Interceptar comando /spoiler
+  else if(text.toLowerCase().startsWith("/spoiler ")){
+    text="[SPOILER]"+text.slice(9);
+  }
+  // Interceptar comando /color
+  else if(text.toLowerCase().startsWith("/color ")){
+    const rest=text.slice(7);
+    const spaceIdx=rest.indexOf(" ");
+    if(spaceIdx>0){
+      const colorName=rest.slice(0,spaceIdx).toLowerCase();
+      const content=rest.slice(spaceIdx+1).trim();
+      const validColors=["rojo","azul","verde","amarillo","purpura","morado"];
+      if(content&&validColors.includes(colorName)){
+        text=`[COLOR:${colorName}]${content}`;
+      }else{
+        showToast("Colores: rojo, azul, verde, amarillo, purpura");return;
+      }
+    }else{showToast("Uso: /color <color> <texto>");return;}
+  }
+  // Interceptar comando /dado o /roll
+  else if(text.toLowerCase().startsWith("/dado")||text.toLowerCase().startsWith("/roll")){
+    const parts=text.split(/\s+/);
+    let sides=6;
+    if(parts[1]){
+      const m=parts[1].match(/^(?:1?d)?(\d+)$/i);
+      if(m)sides=Math.min(Math.max(parseInt(m[1]),2),100);
+    }
+    const result=Math.floor(Math.random()*sides)+1;
+    text=`[ROLL]${result}/${sides}`;
   }
   isTyping=false;
   clearTimeout(typingTimer);
