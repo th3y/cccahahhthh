@@ -1158,7 +1158,7 @@ window.addEventListener("keydown",e=>{
     if(isMobile())return;
     if(chatEl.style.display==="flex"&&overlay.style.display!=="flex")showOverlay();else hideOverlay();
   }
-  if(e.ctrlKey&&e.key.toLowerCase()==="a"&&chatEl.style.display==="flex"){
+  if(e.ctrlKey&&e.key.toLowerCase()==="b"&&chatEl.style.display==="flex"){
     e.preventDefault();
     if(overlay.style.display!=="flex") document.getElementById("panicBtn").click();
   }
