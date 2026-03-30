@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para mi amorcito mas hermosa</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+	body{
+		margin:0;
+		height:100vh;
+		background:#000;
+		overflow:hidden;
+		font-family:Arial, Helvetica, sans-serif;
+		color:white;
+	}
+
+	.stars{
+		position:fixed;
+		inset:0;
+		z-index:0;
+	}
+
+	.star{
+		position:absolute;
+		background:white;
+		border-radius:50%;
+		animation: twinkle infinite ease-in-out;
+	}
+
+	@keyframes pulseWave{
+		0%{ transform:scale(0.8); opacity:0.6; }
+		70%{ transform:scale(2); opacity:0; }
+		100%{ opacity:0; }
+	}
+
+	.container{
+		position:fixed;
+		inset:0;
+		z-index:1;
+	}
+
+	.heart{
+		position:absolute;
+		font-size:70px;
+		color:#ff004f;
+		cursor:pointer;
+		animation: beat 1.5s infinite;
+	}
+
+	@keyframes beat{
+		0%{ transform:scale(1); }
+		20%{ transform:scale(1.25); }
+		40%{ transform:scale(1); }
+		100%{ transform:scale(1); }
+	}
+
+	.heart::after{
+		content:"";
+		position:absolute;
+		inset:-15px;
+		border-radius:50%;
+		border:2px solid var(--halo-color);
+		opacity:0.6;
+		animation:pulseWave 1.5s infinite;
+	}
+
+	@keyframes pulseWave{
+		0%{ transform:scale(0.8); opacity:0.7; }
+		70%{ transform:scale(2); opacity:0; }
+		100%{ opacity:0; }
+	}
+	
+	@keyframes twinkle{
+		0%{ opacity:0; }
+		50%{ opacity:1; }
+		100%{ opacity:0; }
+	}
+
+	.center-name{
+		position:fixed;
+		top:50%;
+		left:50%;
+		transform:translate(-50%,-50%);
+		font-family:'Amatic SC', cursive;
+		font-size:90px;
+		z-index:2;
+		pointer-events:none;
+		text-align:center;
+		text-shadow:
+			-2px -2px 0 #000,
+			 2px -2px 0 #000,
+			-2px  2px 0 #000,
+			 2px  2px 0 #000,
+			 0px  0px 8px rgba(0,0,0,0.8);
+	}
+	
+	.center-name{
+		font-size:90px;
+		-webkit-text-stroke: 2px black;
+		text-shadow: 0 0 8px rgba(0,0,0,0.6);
+	}
+
+	.subtitle{
+		font-size:40px;
+		margin-top:10px;
+		-webkit-text-stroke: 0.5px black;
+		text-shadow: 0 0 6px rgba(0,0,0,0.6);
+	}
+
+
+	.overlay{
+		position:fixed;
+		inset:0;
+		background:rgba(0,0,0,0.95);
+		display:flex;
+		justify-content:center;
+		align-items:center;
+		flex-direction:column;
+		text-align:center;
+		font-size:28px;
+		opacity:0;
+		visibility:hidden;
+		transition:0.4s;
+		z-index:3;
+	}
+
+	.overlay.open{
+		opacity:1;
+		visibility:visible;
+	}
+
+	.close{
+		margin-top:25px;
+		padding:10px 20px;
+		border:none;
+		border-radius:20px;
+		background:#ff004f;
+		color:white;
+		cursor:pointer;
+		font-size:16px;
+	}
+
+	.close:hover{
+		background:#cc003f;
+	}
+
+</style>
+</head>
+<body>
+
+	<div class="stars" id="stars"></div>
+	<div class="container" id="container"></div>
+	<div class="center-name">
+		Para mi amor, Daniela P.O.
+		<div class="subtitle">Feliz 3 meses</div>
+	</div>	
+
+	
+	<div class="overlay" id="overlay">
+		<div id="messageText"></div>
+		<button class="close" id="closeBtn">Cerrar</button>
+	</div>
+
+	<script>
+
+	const messages = [
+		"Gracias por existir, por ser tu, por mostrarme el amor bonito y sincero.",
+		"Contigo todo tiene mas sentido, mas razon, mas colores.",
+		"Aunque haya sido toda una casualidad, es tambien una total eleccion nuestra estar juntos, te adoro.",
+		"Te quieres casar conmigo? Porque yo si quiero, y deseo poder tener una vida juntitos",
+		"Me gustaría poder hacerte entender lo bien que te ves, lo hermosa que eres, y cuanto me gustas y me encantas.",
+		"Nunca crei que ibamos a estar juntos, pero ahora que te tengo a mi lado, no te quiero soltar nunca mi amor.",
+		"Exclusividad, compromiso y lealtad, son las 3 cosas que tenemos presente, y tu siempre estas en mi mente.",
+		"Estare aqui para apoyarte, para ayudarte, para poder crecer juntos, tengamos mucha mas confianza.",
+		"Quiero hacerte muy muy muuuuy feliz, no quiero perderte, quedemonos hasta viejitos y hasta el mas alla.",
+		"Ya te dije que me encantas amor? Eres preciosa, tus ojos hermosos y tus largas pestañas, me encanta tu boquita, toda tu, toda tu carita.",
+		"Daniela es mi enamorada, es mi amiga, es mi amante, es mi novia, es mi mujer, es mi futura esposa.",
+		"Me gustas ♥\nMe encantas ♥\nMe fascinas ♥\nEres perfecta para mi ♥\nEstoy obsesionado con tu belleza ♥",
+		"Solo tengo mis ojos puestos en ti, mi cuerpo y mi alma es solo para ti.",
+		"Me encanta tu persona, tu energia, tu paz. Quiero transmitirte paz, felicidad y mucho amor.",
+		"Tus ojitos hermosos, los amo.",
+		"Quiero que podamos bailar, desde musica lentisima, hasta musica movida, pero siempre juntitos.",
+		"Tocar tu cuerpo, sentir tu rostro, tus labios, tu cabello, son el mejor placer de esta vida.",
+		"Tu voz es demasiado bonita, es dulce, es melodiosa, es fuerte, tiene caracter, es todo.",
+		"Me encanta el sabor de tus labios.",
+		"Deseo besar cada esquina, cada curva, cada lado de tu cuerpo.",
+	];
+	
+	let readyForFinal = false;
+	const finalMessage = "El destino nos quiere decir algo y hagamoslo realidad.\n¿Quieres ser mi novia, Daniela?";
+
+	function createStars(count){
+		const starsContainer = document.getElementById("stars");
+		starsContainer.innerHTML = "";
+
+		for(let i=0;i<count;i++){
+			const star = document.createElement("div");
+			star.classList.add("star");
+
+			star.style.left = Math.random()*100+"vw";
+			star.style.top = Math.random()*100+"vh";
+
+			// variación de tamaño
+			const size = Math.random()*2 + 1;
+			star.style.width = size+"px";
+			star.style.height = size+"px";
+
+			// variación de velocidad
+			star.style.animationDuration = (Math.random()*3 + 2)+"s";
+			star.style.animationDelay = (Math.random()*5)+"s";
+
+			starsContainer.appendChild(star);
+		}
+	}
+
+	createStars(120);
+
+	const container = document.getElementById("container");
+	const overlay = document.getElementById("overlay");
+	const messageText = document.getElementById("messageText");
+	const closeBtn = document.getElementById("closeBtn");
+
+	const heartColors = [
+		"#ff6f91",
+		"#ff9aa2",
+		"#ff4d6d",
+		"#c9184a",
+		"#ff85a1",
+		"#d90429",
+		"#f72585",
+		"#b5179e",
+		"#8438EB",
+		"#FA957A",
+		"#B47AFA",
+		"#FA7A9C",
+		"#FAB17A"
+	];
+
+
+	const fixedWidth = window.innerWidth;
+	const fixedHeight = window.innerHeight;
+
+	function createHearts(){
+		container.innerHTML="";
+		const positions=[];
+		const heartSize=80;
+
+		messages.forEach((msg,index)=>{
+			const heart=document.createElement("i");
+			heart.className="fa-solid fa-heart heart";
+
+			const randomColor = heartColors[Math.floor(Math.random()*heartColors.length)];
+			heart.style.color = randomColor;
+
+			heart.style.setProperty("--halo-color", randomColor);
+
+			let placed=false;
+			let attempts=0;
+
+			const isMobile = window.innerWidth <= 768;
+			const minDistance = isMobile ? heartSize * 1.2 : heartSize * 1.8;
+			while(!placed && attempts<100){
+				attempts++;
+				const x = Math.random() * (fixedWidth - heartSize);
+				const y = Math.random() * (fixedHeight - heartSize);
+
+				let overlap=false;
+				for(let pos of positions){
+					const dx=pos.x-x;
+					const dy=pos.y-y;
+					if(Math.sqrt(dx*dx+dy*dy) < minDistance){
+						overlap=true;
+						break;
+					}
+				}
+
+				if(!overlap){
+					positions.push({x,y});
+					heart.style.left=x+"px";
+					heart.style.top=y+"px";
+					heart.style.animationDelay=(index*0.3)+"s";
+					placed=true;
+				}
+			}
+
+			heart.addEventListener("click",()=>{
+				messageText.innerText = msg;
+				overlay.classList.add("open");
+
+				// Efecto suave antes de desaparecer
+				heart.style.transition = "0.4s";
+				heart.style.transform = "scale(0)";
+				heart.style.opacity = "0";
+
+				setTimeout(()=>{
+					heart.remove();
+					checkIfFinished();
+				},400);
+			});
+			
+			closeBtn.addEventListener("click",()=>{
+				overlay.classList.remove("open");
+
+				if(readyForFinal){
+					readyForFinal = false; // evitar repetición
+					setTimeout(()=>{
+						showFinalHeart();
+					},300);
+				}
+			});
+
+			container.appendChild(heart);
+		});
+	}
+
+	function checkIfFinished(){
+		const remaining = document.querySelectorAll(".heart");
+
+		if(remaining.length === 0){
+			readyForFinal = true;
+		}
+	}
+
+	function showFinalHeart(){
+
+		const finalHeart = document.createElement("i");
+		finalHeart.className = "fa-solid fa-heart"; // ← ya no tiene clase "heart"
+
+		finalHeart.style.position = "fixed";
+		finalHeart.style.left = "50%";
+		finalHeart.style.top = "50%";
+		finalHeart.style.transform = "translate(-50%,-50%) scale(0)";
+		finalHeart.style.fontSize = "120px";
+		finalHeart.style.zIndex = "2";
+		finalHeart.style.color = "#ff4d6d";
+		finalHeart.style.transition = "0.8s";
+
+		document.body.appendChild(finalHeart);
+
+		setTimeout(()=>{
+			finalHeart.style.transform = "translate(-50%,-50%) scale(1.5)";
+		},100);
+
+		setTimeout(()=>{
+			messageText.innerText = finalMessage;
+			overlay.classList.add("open");
+		},1200);
+
+		setTimeout(()=>{
+			finalHeart.style.opacity = "0";
+			finalHeart.style.transform = "translate(-50%,-50%) scale(0)";
+		},4000);
+
+		setTimeout(()=>{
+			finalHeart.remove();
+		},4800);
+	}
+
+	createHearts();
+	window.addEventListener("resize",createHearts);
+
+	closeBtn.addEventListener("click",()=>{
+		overlay.classList.remove("open");
+	});
+
+	</script>
+
+</body>
+
+</html>
