@@ -15,6 +15,7 @@ const io = new Server(server, {
 const VALID_CODES = (process.env.VALID_CODES || "").split(",").map(c => c.trim()).filter(Boolean);
 const DELETE_CODE = process.env.DELETE_CODE;
 const MIN_INTERVAL_MS = 450;
+const MAX_HISTORY = 45;
 
 // -------------------- UTIL --------------------
 const DATA_FILE = path.join(__dirname, "rooms.json");
@@ -22,7 +23,13 @@ const DATA_FILE = path.join(__dirname, "rooms.json");
 function loadRooms() {
   try {
     if (fs.existsSync(DATA_FILE)) {
-      return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+      const data = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+      for (const room of Object.values(data)) {
+        if (room.history && room.history.length > MAX_HISTORY) {
+          room.history = room.history.slice(-MAX_HISTORY);
+        }
+      }
+      return data;
     }
   } catch (err) {
     console.error("Error leyendo rooms.json:", err);
@@ -61,54 +68,6 @@ setInterval(() => {
   saveRooms(rooms);
 }, 15000);
 
-// -------------------- LIMPIEZA DIARIA 3 AM CENTRAL --------------------
-// Obtiene la hora actual en US Central (America/Chicago) como { h, m, s }
-function getCentralTime() {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Chicago",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    hour12: false
-  }).formatToParts(now);
-  return {
-    h: parseInt(parts.find(p => p.type === "hour").value),
-    m: parseInt(parts.find(p => p.type === "minute").value),
-    s: parseInt(parts.find(p => p.type === "second").value)
-  };
-}
-
-function runCleanup() {
-  for (const roomId of Object.keys(rooms)) {
-    rooms[roomId].history = [];
-    io.to(roomId).emit("chat-deleted");
-  }
-  saveRooms(rooms);
-  console.log("[Limpieza] Historial eliminado a las 3:00 AM Central.");
-}
-
-// Polling cada 5 segundos — dispara UNA sola vez cuando son exactamente las 3:00 AM
-// (ventana de 0:00 a 0:10 para no depender del segundo exacto)
-let cleanupFiredToday = false;
-
-setInterval(() => {
-  const { h, m, s } = getCentralTime();
-
-  // Resetea el flag fuera de la ventana de las 3 AM (por ej. a las 3:01)
-  if (h === 3 && m >= 1) {
-    cleanupFiredToday = false;
-  }
-
-  // Dispara en la ventana 3:00:00 - 3:00:10
-  if (h === 3 && m === 0 && s <= 10 && !cleanupFiredToday) {
-    cleanupFiredToday = true;
-    runCleanup();
-  }
-}, 5000);
-
-console.log("[Limpieza] Scheduler activo — limpieza diaria a las 3:00 AM Central (America/Chicago).");
-
 // -------------------- SOCKET.IO --------------------
 io.on("connection", (socket) => {
 
@@ -138,7 +97,7 @@ io.on("connection", (socket) => {
     }
     rooms[room].users[socket.id] = nick;
 
-    socket.emit("history", rooms[room].history);
+    socket.emit("history", rooms[room].history.slice(-MAX_HISTORY));
     socket.to(room).emit("user-joined", nick);
     io.to(room).emit("update-users", Object.values(rooms[room].users));
   });
@@ -177,7 +136,7 @@ io.on("connection", (socket) => {
     };
 
     rooms[room].history.push(msg);
-    if (rooms[room].history.length > 50) rooms[room].history.shift();
+    while (rooms[room].history.length > MAX_HISTORY) rooms[room].history.shift();
     io.to(room).emit("message", msg);
   });
 
