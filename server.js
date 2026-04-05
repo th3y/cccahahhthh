@@ -17,6 +17,9 @@ const DELETE_CODE = process.env.DELETE_CODE;
 const MIN_INTERVAL_MS = 450;
 const MAX_HISTORY = 45;
 
+// Guardar fotos en historial del servidor (true = sí, false = efímeras siempre)
+const PHOTO_SAVE_IN_HISTORY = false;
+
 // -------------------- UTIL --------------------
 const DATA_FILE = path.join(__dirname, "rooms.json");
 
@@ -138,6 +141,36 @@ io.on("connection", (socket) => {
     rooms[room].history.push(msg);
     while (rooms[room].history.length > MAX_HISTORY) rooms[room].history.shift();
     io.to(room).emit("message", msg);
+  });
+
+  // ---------- FOTO (ephemeral — nunca se guarda en historial) ----------
+  socket.on("photo", (data) => {
+    const room = data.room;
+    if (!rooms[room]) return;
+    if (!checkRateLimit(socket.id)) {
+      socket.emit("rate-limited", { reason: "Demasiados mensajes. Espera un momento." });
+      return;
+    }
+    if (!data.data || typeof data.data !== "string") return;
+    if (!data.data.startsWith("data:image/")) return;
+    if (data.data.length > 2_000_000) {
+      socket.emit("rate-limited", { reason: "Foto demasiado grande." });
+      return;
+    }
+    const msg = {
+      id: data.id,
+      nick: data.nick,
+      time: data.time,
+      replyTo: data.replyTo || null,
+      photo: data.data,
+      selfDestruct: data.selfDestruct || false,
+      sdSeconds: data.sdSeconds || 7
+    };
+    if (PHOTO_SAVE_IN_HISTORY && !msg.selfDestruct) {
+      rooms[room].history.push(msg);
+      while (rooms[room].history.length > MAX_HISTORY) rooms[room].history.shift();
+    }
+    io.to(room).emit("photo", msg);
   });
 
   // ---------- SD DESTROY ----------

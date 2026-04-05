@@ -158,6 +158,16 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 /* GIF en burbuja */
 .msg-gif{border-radius:8px;overflow:hidden;max-width:220px;margin-top:4px;cursor:pointer;}
 .msg-gif img{width:100%;display:block;border-radius:8px;}
+@media(max-width:480px){.msg-gif{max-width:140px;}}
+/* FOTO en burbuja */
+.msg-photo{border-radius:8px;overflow:hidden;max-width:220px;margin-top:4px;cursor:pointer;position:relative;}
+.msg-photo img{width:100%;display:block;border-radius:8px;}
+.msg-photo-ephemeral-badge{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fca5a5;}
+@media(max-width:480px){.msg-photo{max-width:160px;}}
+/* BOTÓN FOTO */
+#photoBtn{flex-shrink:0;padding:0 11px;border:none;border-radius:8px;background:#1f2937;color:#a78bfa;cursor:pointer;font-size:18px;line-height:1;transition:background 0.2s;height:44px;display:flex;align-items:center;justify-content:center;}
+#photoBtn:hover{background:#374151;}
+@media(max-width:480px){#photoBtn{height:36px;}}
 /* ---- EMOJI BUTTON ---- */
 #emojiBtn{flex-shrink:0;padding:0 12px;height:44px;border:none;border-radius:8px;background:#1f2937;color:white;cursor:pointer;font-size:20px;line-height:1;transition:background 0.2s;display:flex;align-items:center;justify-content:center;}
 #emojiBtn:hover{background:#374151;}
@@ -395,8 +405,11 @@ body.amoled .roll-result .roll-num{color:#c9920f;}
     <div id="accessoryRow">
       <button id="emojiBtn" title="Emojis">😊</button>
       <button id="gifBtn" title="GIF">GIF</button>
+      <button id="photoBtn" title="Enviar foto">📷</button>
       <button id="sdBtn" title="Mensaje autodestructivo">🔥</button>
     </div>
+    <!-- Input file oculto para fotos -->
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
   </div>
 </div>
 
@@ -580,6 +593,71 @@ emojiBtn.addEventListener("click",e=>{e.stopPropagation();if(pickerOpen)closePic
 emojiSearch.addEventListener("input",()=>{searchQuery=emojiSearch.value.trim().toLowerCase();renderGrid();});
 document.addEventListener("click",e=>{if(pickerOpen&&!emojiPicker.contains(e.target)&&e.target!==emojiBtn)closePicker();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&pickerOpen)closePicker();});
+
+// ==================== FOTO ====================
+const photoBtn = document.getElementById("photoBtn");
+const photoInput = document.getElementById("photoInput");
+
+photoBtn.addEventListener("click", () => photoInput.click());
+
+photoInput.addEventListener("change", async () => {
+  const file = photoInput.files[0];
+  photoInput.value = "";
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { showToast("Solo se permiten imágenes"); return; }
+
+  try {
+    const compressed = await compressImage(file, 1024, 0.75);
+    if (compressed.length > 2_000_000) { showToast("Foto demasiado grande después de comprimir"); return; }
+    sendPhoto(compressed);
+  } catch(e) {
+    showToast("Error al procesar la foto");
+  }
+});
+
+function compressImage(file, maxPx, quality){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else        { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function sendPhoto(base64){
+  if (!socket || !room || !nick) return;
+  isTyping = false;
+  clearTimeout(typingTimer);
+  socket.emit("stop-typing", {room, nick});
+  const msg = {
+    id: Date.now() + "_photo_" + Math.random(),
+    room, nick,
+    time: new Date().toISOString(),
+    replyTo: replyTo || null,
+    data: base64,
+    selfDestruct: sdMode || false,
+    sdSeconds: sdMode ? sdSeconds : 7
+  };
+  socket.emit("photo", msg);
+  clearReply();
+  if (sdMode) { sdMode = false; sdBtn.classList.remove("active"); sdConfig.classList.remove("open"); }
+  resetInactivity();
+}
 
 // ==================== SD CONFIG ====================
 let sdMode = false;
@@ -784,6 +862,7 @@ function saveMsgCache(messages){
 
 function pushMsgCache(msg){
   if(msg.selfDestruct)return;
+  if(msg.photo)return; // fotos nunca al caché local
   const cache=loadMsgCache();
   if(cache.some(m=>m.id===msg.id))return;
   cache.push(msg);
@@ -842,6 +921,14 @@ function renderContent(text){
     return `<div class="msg-img-preview" onclick="openLightbox('${raw.replace(/'/g,"\\'")}')"><img src="${safe}" alt="imagen" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`;
   }
   return linkify(text);
+}
+
+function renderPhoto(msg){
+  const badge = msg.selfDestruct ? `<div class="msg-photo-ephemeral-badge">💣</div>` : "";
+  return `<div class="msg-photo" onclick="openLightbox('${msg.photo.replace(/'/g,"\\'")}')">
+    <img src="${msg.photo}" alt="foto" loading="lazy">
+    ${badge}
+  </div>`;
 }
 
 // ---- LOGIN ----
@@ -916,6 +1003,12 @@ function initSocket(){
     pushMsgCache(msg);
     if(msg.nick!==nick)playNotif();
   });
+  socket.on("photo",(msg)=>{
+    if(seenMessages.has(msg.id))return;seenMessages.add(msg.id);
+    addMessage(msg);
+    // fotos nunca van a caché local
+    if(msg.nick!==nick)playNotif();
+  });
   socket.on("user-joined",user=>addSystemMessage(`${user} se ha unido`));
   socket.on("user-left",user=>addSystemMessage(`${user} se ha ido`));
   socket.on("update-users",users=>renderOnlineUsers(users));
@@ -940,12 +1033,14 @@ function initSocket(){
 function addMessage(msg){
   const el=document.createElement("div");
   const isMe=msg.nick===nick;
-  const isMeAction=msg.text.startsWith("[ME]");
-  const isRollAction=msg.text.startsWith("[ROLL]");
+  const isMeAction=(msg.text||"").startsWith("[ME]");
+  const isRollAction=(msg.text||"").startsWith("[ROLL]");
   const isActionMsg=isMeAction||isRollAction;
   el.className="message "+(isMeAction?"me-action":isRollAction?"roll-action":(isMe?"me":"other"));
   el.dataset.id=msg.id;el.dataset.nick=msg.nick;
-  el.dataset.text=msg.text.startsWith("[GIF]")?"🖼 GIF":msg.text;
+  el.dataset.text=msg.text
+    ? (msg.text.startsWith("[GIF]")?"🖼 GIF":msg.text)
+    : (msg.photo?"📷 Foto":"");
   const t=new Date(msg.time).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
   let replyHtml="";
   if(msg.replyTo){
@@ -956,7 +1051,7 @@ function addMessage(msg){
       <div class="msg-bubble">
         ${isActionMsg?"":(`<div class="author">${escapeHtml(msg.nick)}</div>`)}
         ${replyHtml}
-        <div class="sd-content">${renderContent(msg.text)}</div>
+        <div class="sd-content">${msg.photo ? renderPhoto(msg) : renderContent(msg.text||"")}</div>
         ${isActionMsg?"":`<div class="timestamp">${t}</div>`}
       </div>
       ${isActionMsg?"":`<button class="reply-btn" title="Citar">↩</button>`}
@@ -1323,6 +1418,19 @@ function renderSdMessage(el,msg,bubble){
 
 // ---- KEEPALIVE ----
 setInterval(()=>{if(socket&&socket.connected)socket.emit("ping-check");},3*60*1000);
+
+// ---- WAKE LOCK ----
+let wakeLock = null;
+async function requestWakeLock(){
+  if(!("wakeLock" in navigator))return;
+  try{
+    wakeLock = await navigator.wakeLock.request("screen");
+  }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible")requestWakeLock();
+});
+requestWakeLock();
 
 // ---- INIT ----
 window.addEventListener("load",()=>{
