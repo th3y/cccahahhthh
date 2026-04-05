@@ -169,6 +169,18 @@ io.on("connection", (socket) => {
     if (PHOTO_SAVE_IN_HISTORY && !msg.selfDestruct) {
       rooms[room].history.push(msg);
       while (rooms[room].history.length > MAX_HISTORY) rooms[room].history.shift();
+    } else if (!PHOTO_SAVE_IN_HISTORY && !msg.selfDestruct) {
+      // Rastro de texto sin el binario
+      const ghost = {
+        id: msg.id + "_ghost",
+        nick: msg.nick,
+        time: msg.time,
+        text: "envió una lata de atún.",
+        replyTo: null,
+        isPhotoGhost: true
+      };
+      rooms[room].history.push(ghost);
+      while (rooms[room].history.length > MAX_HISTORY) rooms[room].history.shift();
     }
     io.to(room).emit("photo", msg);
   });

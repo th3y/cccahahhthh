@@ -164,6 +164,8 @@ body{background:#0b0f19;color:white;height:100dvh;display:flex;justify-content:c
 .msg-photo img{width:100%;display:block;border-radius:8px;}
 .msg-photo-ephemeral-badge{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fca5a5;}
 @media(max-width:480px){.msg-photo{max-width:160px;}}
+/* RASTRO de foto */
+.msg-photo-ghost{font-size:12px;opacity:0.5;font-style:italic;}
 /* BOTÓN FOTO */
 #photoBtn{flex-shrink:0;padding:0 11px;border:none;border-radius:8px;background:#1f2937;color:#a78bfa;cursor:pointer;font-size:18px;line-height:1;transition:background 0.2s;height:44px;display:flex;align-items:center;justify-content:center;}
 #photoBtn:hover{background:#374151;}
@@ -607,7 +609,7 @@ photoInput.addEventListener("change", async () => {
   if (!file.type.startsWith("image/")) { showToast("Solo se permiten imágenes"); return; }
 
   try {
-    const compressed = await compressImage(file, 1024, 0.75);
+    const compressed = await compressImage(file, 800, 0.65);
     if (compressed.length > 2_000_000) { showToast("Foto demasiado grande después de comprimir"); return; }
     sendPhoto(compressed);
   } catch(e) {
@@ -887,7 +889,10 @@ function extractYouTubeId(text){
 }
 function isImageUrl(text){return /^https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s]*)?$/i.test(text.trim());}
 const COLOR_MAP={rojo:"#ef4444",azul:"#60a5fa",verde:"#4ade80",amarillo:"#facc15",purpura:"#c084fc",morado:"#c084fc"};
-function renderContent(text){
+function renderContent(text, isPhotoGhost){
+  if(isPhotoGhost){
+    return `<span class="msg-photo-ghost">${escapeHtml(text)}</span>`;
+  }
   if(text.startsWith("[ME]")){
     const action=text.slice(4);
     return `<span class="me-action-text">* <span class="me-nick"></span> ${escapeHtml(action)}</span>`;
@@ -1051,7 +1056,7 @@ function addMessage(msg){
       <div class="msg-bubble">
         ${isActionMsg?"":(`<div class="author">${escapeHtml(msg.nick)}</div>`)}
         ${replyHtml}
-        <div class="sd-content">${msg.photo ? renderPhoto(msg) : renderContent(msg.text||"")}</div>
+        <div class="sd-content">${msg.photo ? renderPhoto(msg) : renderContent(msg.text||"", !!msg.isPhotoGhost)}</div>
         ${isActionMsg?"":`<div class="timestamp">${t}</div>`}
       </div>
       ${isActionMsg?"":`<button class="reply-btn" title="Citar">↩</button>`}
